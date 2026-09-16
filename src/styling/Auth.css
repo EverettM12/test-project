@@ -52,18 +52,10 @@
 .auth-primary,
 .auth-github {
   width: 100%;
-  min-height: 54px;
-  border: 1.5px solid #cfcfc9;
-  border-radius: 16px;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
 
 .auth-primary {
   margin-top: 8px;
-  background-color: #ffffff;
 }
 
 .auth-github {
@@ -72,33 +64,22 @@
   border-color: #171717;
 }
 
-.auth-primary:hover:not(:disabled),
-.auth-github:hover:not(:disabled) {
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.09);
-  transform: translateY(-1px);
-}
-
-.auth-primary:active:not(:disabled),
-.auth-github:active:not(:disabled) {
-  transform: translateY(0);
-}
-
-.auth-primary:disabled,
-.auth-github:disabled {
-  cursor: wait;
-  opacity: 0.6;
-}
-
-.auth-link {
+.auth-link-button {
   align-self: center;
+  min-height: auto;
   padding: 4px 8px;
   border: 0;
   background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
+  box-shadow: none;
+  font-size: 0.9rem;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+.auth-link-button:hover:not(:disabled) {
+  background: transparent;
+  box-shadow: none;
+  transform: none;
 }
 
 .auth-divider {
