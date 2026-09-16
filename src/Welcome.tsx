@@ -43,7 +43,7 @@ function Welcome() {
       <header className="top-bar">
         <button
           type="button"
-          className={`menu-button${menuOpen ? ' is-open' : ''}`}
+          className={`site-button menu-button${menuOpen ? ' is-open' : ''}`}
           onClick={toggleMenu}
           aria-label="Open menu"
           aria-expanded={menuOpen}
@@ -62,7 +62,7 @@ function Welcome() {
             <span className="account-email">{email || 'No email available'}</span>
           </div>
 
-          <button type="button" className="side-menu-action" onClick={signOut}>
+          <button type="button" className="site-button side-menu-action" onClick={signOut}>
             Sign Out
           </button>
         </div>
