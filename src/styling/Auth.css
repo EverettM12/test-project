@@ -9,7 +9,7 @@
   align-items: stretch;
   gap: 14px;
   background-color: #f4f3ee;
-  border: 1.5px solid #d8d6cf;
+  border: 1.5px none #d8d6cf;
   border-radius: 30px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.137);
 }
