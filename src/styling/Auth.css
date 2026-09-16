@@ -1,0 +1,91 @@
+/* base style white */
+
+.auth-button-login,
+.auth-button-signup,
+.auth-box {
+  border: 1.5px;
+  border-radius: 30px;
+  margin: 10px;
+}
+
+.auth-box {
+  width: 550px;
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #f4f3ee;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.137);
+  position: absolute;
+  margin-bottom: 20px;
+}
+
+.auth-button-login,
+.auth-button-signup {
+  background-color: #ffffff;
+  width: 400px;
+  height: 100px;
+  font-size: 1.4rem;
+  font-family: inherit;
+  transition: width 0.4s ease-in-out;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.auth-button-login {
+  position: absolute;
+  margin-bottom: 90px;
+}
+
+.auth-button-signup {
+  position: absolute;
+  margin-top: 200px;
+}
+
+.auth-button-login:hover,
+.auth-button-signup:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.075);
+}
+
+.auth-button-login:active,
+.auth-button-signup:active {
+  animation: button-pressed 0.4s ease-in-out forwards;
+}
+
+@keyframes button-pressed {
+  0% {
+    width: 400px;
+    height: 100px;
+  }
+  50% {
+    width: 350px;
+    height: 90px;
+  }
+  100% {
+    width: 400px;
+    height: 100px;
+  }
+}
+
+.welcome-label {
+  font-size: 2rem;
+  padding-bottom: 20px;
+  position: absolute;
+  margin-bottom: 290px;
+}
+
+.parent {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #ffffff;
+}
