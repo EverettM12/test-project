@@ -65,7 +65,7 @@ function PasswordReset({ onComplete }: PasswordResetProps) {
             required
           />
 
-          <button type="submit" className="auth-primary" disabled={loading}>
+          <button type="submit" className="site-button auth-primary" disabled={loading}>
             {loading ? 'Saving...' : 'Set Password'}
           </button>
         </form>
