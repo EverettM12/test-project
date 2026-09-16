@@ -138,37 +138,37 @@ function Auth() {
             </>
           )}
 
-          <button type="submit" className="auth-primary" disabled={loading}>
+          <button type="submit" className="site-button auth-primary" disabled={loading}>
             {loading ? 'Loading...' : submitLabel}
           </button>
         </form>
 
         {mode === 'login' && (
           <>
-            <button type="button" className="auth-link" onClick={() => switchMode('reset')}>
+            <button type="button" className="site-button auth-link-button" onClick={() => switchMode('reset')}>
               Forgot password?
             </button>
 
             <div className="auth-divider">or</div>
 
-            <button type="button" className="auth-github" onClick={handleGitHubLogin} disabled={loading}>
+            <button type="button" className="site-button auth-github" onClick={handleGitHubLogin} disabled={loading}>
               Continue with GitHub
             </button>
 
-            <button type="button" className="auth-link" onClick={() => switchMode('signup')}>
+            <button type="button" className="site-button auth-link-button" onClick={() => switchMode('signup')}>
               Need an account? Sign Up
             </button>
           </>
         )}
 
         {mode === 'signup' && (
-          <button type="button" className="auth-link" onClick={() => switchMode('login')}>
+          <button type="button" className="site-button auth-link-button" onClick={() => switchMode('login')}>
             Already have an account? Login
           </button>
         )}
 
         {mode === 'reset' && (
-          <button type="button" className="auth-link" onClick={() => switchMode('login')}>
+          <button type="button" className="site-button auth-link-button" onClick={() => switchMode('login')}>
             Back to Login
           </button>
         )}
