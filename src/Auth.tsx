@@ -115,6 +115,23 @@ function Auth() {
     }
   }
 
+  async function handleDiscordLogin() {
+    setLoading(true);
+    resetFeedback();
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'discord',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    }
+  }
+
   const title =
     mode === 'login' ? 'Welcome Back!' : mode === 'signup' ? 'Create Account' : 'Reset Password';
   const submitLabel =
@@ -175,6 +192,12 @@ function Auth() {
             <button type="button" className="site-button auth-github" onClick={handleGoogleLogin} disabled={loading}>
               Continue with Google
             </button>
+
+
+            <button type="button" className="site-button auth-github" onClick={handleDiscordLogin} disabled={loading}>
+              Continue with Discord
+            </button>
+
 
             <button type="button" className="site-button auth-link-button" onClick={() => switchMode('signup')}>
               Need an account? Sign Up
