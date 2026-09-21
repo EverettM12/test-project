@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { supabase } from './utils/supabase.ts';
 import './styling/Welcome.css';
 
-function getProviderLabel(provider: string | undefined): string {
+type LoginProvider = 'email' | 'github' | 'google' | 'discord';
+
+const LAST_LOGIN_PROVIDER_KEY = 'test-project:last-login-provider';
+
+function getProviderLabel(provider: LoginProvider | undefined): string {
   if (provider === 'github') {
     return 'GitHub';
   }
@@ -16,6 +20,21 @@ function getProviderLabel(provider: string | undefined): string {
   }
 
   return 'Email';
+}
+
+function getRememberedProvider(): LoginProvider | undefined {
+  const provider = sessionStorage.getItem(LAST_LOGIN_PROVIDER_KEY);
+
+  if (
+    provider === 'email' ||
+    provider === 'github' ||
+    provider === 'google' ||
+    provider === 'discord'
+  ) {
+    return provider;
+  }
+
+  return undefined;
 }
 
 function Welcome() {
@@ -35,26 +54,14 @@ function Welcome() {
 
       setEmail(user.email ?? '');
 
-      const identities = user.identities ?? [];
-      const mostRecentIdentity = identities.reduce<typeof identities[number] | null>(
-        (current, identity) => {
-          if (!current) {
-            return identity;
-          }
+      const rememberedProvider = getRememberedProvider();
 
-          const currentTime = current.last_sign_in_at
-            ? new Date(current.last_sign_in_at).getTime()
-            : 0;
-          const identityTime = identity.last_sign_in_at
-            ? new Date(identity.last_sign_in_at).getTime()
-            : 0;
+      if (rememberedProvider) {
+        setProvider(getProviderLabel(rememberedProvider));
+        return;
+      }
 
-          return identityTime > currentTime ? identity : current;
-        },
-        null,
-      );
-
-      setProvider(getProviderLabel(mostRecentIdentity?.provider));
+      setProvider(getProviderLabel(user.app_metadata?.provider as LoginProvider | undefined));
     }
 
     loadUser();
@@ -65,6 +72,7 @@ function Welcome() {
   }
 
   async function signOut() {
+    sessionStorage.removeItem(LAST_LOGIN_PROVIDER_KEY);
     await supabase.auth.signOut();
   }
 
