@@ -2,6 +2,22 @@ import { useEffect, useState } from 'react';
 import { supabase } from './utils/supabase.ts';
 import './styling/Welcome.css';
 
+function getProviderLabel(provider: string | undefined): string {
+  if (provider === 'github') {
+    return 'GitHub';
+  }
+
+  if (provider === 'google') {
+    return 'Google';
+  }
+
+  if (provider === 'discord') {
+    return 'Discord';
+  }
+
+  return 'Email';
+}
+
 function Welcome() {
   const [email, setEmail] = useState('');
   const [provider, setProvider] = useState('Email');
@@ -20,19 +36,25 @@ function Welcome() {
       setEmail(user.email ?? '');
 
       const identities = user.identities ?? [];
-      const githubIdentity = identities.find((identity) => identity.provider === 'github');
-      const googleIdentity = identities.find((identity) => identity.provider === 'google');
-      const discordIdentity = identities.find((identity) => identity.provider === 'discord');
+      const mostRecentIdentity = identities.reduce<typeof identities[number] | null>(
+        (current, identity) => {
+          if (!current) {
+            return identity;
+          }
 
-      if (githubIdentity) {
-        setProvider('GitHub');
-      }
-      if (googleIdentity) {
-        setProvider('Google');
-      }
-      if (discordIdentity) {
-        setProvider('Discord');
-      }
+          const currentTime = current.last_sign_in_at
+            ? new Date(current.last_sign_in_at).getTime()
+            : 0;
+          const identityTime = identity.last_sign_in_at
+            ? new Date(identity.last_sign_in_at).getTime()
+            : 0;
+
+          return identityTime > currentTime ? identity : current;
+        },
+        null,
+      );
+
+      setProvider(getProviderLabel(mostRecentIdentity?.provider));
     }
 
     loadUser();
