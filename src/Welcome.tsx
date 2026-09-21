@@ -30,7 +30,7 @@ function Welcome() {
       if (googleIdentity) {
         setProvider('Google');
       }
-      if (discordIdentityIdentity) {
+      if (discordIdentity) {
         setProvider('Discord');
       }
     }
