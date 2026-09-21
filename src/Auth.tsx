@@ -3,6 +3,13 @@ import './styling/Auth.css';
 import { supabase } from './utils/supabase.ts';
 
 type AuthMode = 'login' | 'signup' | 'reset';
+type LoginProvider = 'email' | 'github' | 'google' | 'discord';
+
+const LAST_LOGIN_PROVIDER_KEY = 'test-project:last-login-provider';
+
+function rememberLoginProvider(provider: LoginProvider) {
+  sessionStorage.setItem(LAST_LOGIN_PROVIDER_KEY, provider);
+}
 
 function Auth() {
   const [mode, setMode] = useState<AuthMode>('login');
@@ -38,6 +45,7 @@ function Auth() {
           throw error;
         }
 
+        rememberLoginProvider('email');
         return;
       }
 
@@ -54,7 +62,9 @@ function Auth() {
           throw error;
         }
 
-        if (!data.session) {
+        if (data.session) {
+          rememberLoginProvider('email');
+        } else {
           setMessage('Check your email to confirm your account.');
         }
 
@@ -84,6 +94,7 @@ function Auth() {
   async function handleGitHubLogin() {
     setLoading(true);
     resetFeedback();
+    rememberLoginProvider('github');
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
@@ -101,6 +112,7 @@ function Auth() {
   async function handleGoogleLogin() {
     setLoading(true);
     resetFeedback();
+    rememberLoginProvider('google');
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -118,6 +130,7 @@ function Auth() {
   async function handleDiscordLogin() {
     setLoading(true);
     resetFeedback();
+    rememberLoginProvider('discord');
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'discord',
