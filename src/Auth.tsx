@@ -179,9 +179,15 @@ function Auth() {
 
         {mode === 'login' && (
           <>
+          <div className="extras-above-all">
             <button type="button" className="site-button auth-link-button" onClick={() => switchMode('reset')}>
               Forgot password?
             </button>
+
+            <button type="button" className="site-button auth-link-button" onClick={() => switchMode('signup')}>
+              Need an account? Sign Up
+            </button>
+          </div>
 
             <div className="auth-divider">or</div>
 
@@ -189,19 +195,15 @@ function Auth() {
               Continue with GitHub
             </button>
 
-            <button type="button" className="site-button auth-github" onClick={handleGoogleLogin} disabled={loading}>
+            <button type="button" className="site-button auth-google" onClick={handleGoogleLogin} disabled={loading}>
               Continue with Google
             </button>
 
 
-            <button type="button" className="site-button auth-github" onClick={handleDiscordLogin} disabled={loading}>
+            <button type="button" className="site-button auth-discord" onClick={handleDiscordLogin} disabled={loading}>
               Continue with Discord
             </button>
-
-
-            <button type="button" className="site-button auth-link-button" onClick={() => switchMode('signup')}>
-              Need an account? Sign Up
-            </button>
+            
           </>
         )}
 

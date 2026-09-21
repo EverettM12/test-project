@@ -61,7 +61,19 @@
 .auth-github {
   background-color: #171717;
   color: #ffffff;
-  border-color: #171717;
+  border: none;
+}
+
+.auth-google {
+  background-color: rgb(255, 132, 132);
+  color: #ffffff;
+  border: none;
+}
+
+.auth-discord {
+  background-color: rgb(135, 80, 172);
+  color: #ffffff;
+  border: none;
 }
 
 .auth-link-button {
@@ -121,4 +133,10 @@
   min-height: 100vh;
   padding: 16px;
   box-sizing: border-box;
+}
+
+.extras-above-all {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
