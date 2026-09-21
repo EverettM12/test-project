@@ -75,13 +75,13 @@
 }
 
 .auth-google {
-  background-color: #4285f4;
-  border-color: #4285f4;
+  background-color: #EA4335;
+  border-color: #EA4335;
 }
 
 .auth-google:hover:not(:disabled) {
-  background-color: #357ae8;
-  border-color: #357ae8;
+  background-color: #d63e30;
+  border-color: #EA4335;
 }
 
 .auth-discord {
