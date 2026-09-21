@@ -21,9 +21,13 @@ function Welcome() {
 
       const identities = user.identities ?? [];
       const githubIdentity = identities.find((identity) => identity.provider === 'github');
+      const googleIdentity = identities.find((identity) => identity.provider === 'google');
 
       if (githubIdentity) {
         setProvider('GitHub');
+      }
+      if (googleIdentity) {
+        setProvider('Google');
       }
     }
 
