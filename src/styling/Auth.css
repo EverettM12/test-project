@@ -49,8 +49,8 @@
   border-color: #8f8e88;
 }
 
-.auth-primary,
-.auth-github {
+.auth-company-button,
+.auth-primary {
   width: 100%;
 }
 
@@ -58,22 +58,40 @@
   margin-top: 8px;
 }
 
-.auth-github {
-  background-color: #171717;
+.auth-company-button {
+  border-width: 1.5px;
+  border-style: solid;
   color: #ffffff;
-  border: none;
+}
+
+.auth-github {
+  background-color: #24292f;
+  border-color: #24292f;
+}
+
+.auth-github:hover:not(:disabled) {
+  background-color: #1f2328;
+  border-color: #1f2328;
 }
 
 .auth-google {
-  background-color: rgb(255, 132, 132);
-  color: #ffffff;
-  border: none;
+  background-color: #4285f4;
+  border-color: #4285f4;
+}
+
+.auth-google:hover:not(:disabled) {
+  background-color: #357ae8;
+  border-color: #357ae8;
 }
 
 .auth-discord {
-  background-color: rgb(135, 80, 172);
-  color: #ffffff;
-  border: none;
+  background-color: #5865f2;
+  border-color: #5865f2;
+}
+
+.auth-discord:hover:not(:disabled) {
+  background-color: #4752c4;
+  border-color: #4752c4;
 }
 
 .auth-link-button {
@@ -83,6 +101,7 @@
   border: 0;
   background: transparent;
   box-shadow: none;
+  color: #4f4e49;
   font-size: 0.9rem;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -91,6 +110,7 @@
 .auth-link-button:hover:not(:disabled) {
   background: transparent;
   box-shadow: none;
+  color: #171717;
   transform: none;
 }
 
@@ -137,6 +157,16 @@
 
 .extras-above-all {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
+  width: 100%;
+  gap: 16px;
+  margin: -2px 0 2px;
+}
+
+@media (max-width: 520px) {
+  .extras-above-all {
+    flex-direction: column;
+    gap: 4px;
+  }
 }
