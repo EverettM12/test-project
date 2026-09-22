@@ -247,7 +247,17 @@ function WikiView({
     const pageId = event.dataTransfer.getData('text/plain') || dragId;
     if (!pageId || !dropTarget?.id) return;
 
-    void onMovePage(pageId, dropTarget.id, dropTarget.position);
+    const targetId = dropTarget.id;
+    const position = dropTarget.position;
+
+    void (async () => {
+      const moved = await onMovePage(pageId, targetId, position);
+
+      if (moved && targetId && position === 'inside') {
+        setExpandedIds((current) => new Set(current).add(targetId));
+      }
+    })();
+
     setDragId(null);
     setDropTarget(null);
   }
