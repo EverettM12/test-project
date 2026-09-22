@@ -997,8 +997,7 @@
   .quick-dock { grid-column: auto; }
 
   .inline-create,
-  .github-form,  .build-upload,  .create-organization {    grid-template-columns: 1fr;    display: grid;  }  .inline-create input { width: auto; }
-  .github-connected { grid-template-columns: 1fr; }
+  .github-form,  .build-upload,  .create-organization {    grid-template-columns: 1fr;    display: grid;  }  .inline-create input { width: auto; }  .github-connected { grid-template-columns: 1fr; }
   .table-head { display: none; }
   .table-row { grid-template-columns: 1fr 1fr; gap: 8px; }
   .resource-row { align-items: flex-start; flex-direction: column; gap: 7px; }
@@ -1997,8 +1996,7 @@
   border-radius: 14px;  background: #1f1f1c;
   color: #f4f3ee;}
 .markdown-code-block code {
-  padding: 0;
-  background: transparent;
+  padding: 0;  background: transparent;
   color: inherit;
   line-height: 1.6;
 }
@@ -2997,8 +2995,7 @@ body {
 .devdock-sidebar .projects-label {
   margin-top: 10px;  opacity: 0;
   visibility: hidden;
-  transition: opacity 0.16s ease;
-}
+  transition: opacity 0.16s ease;}
 
 .devdock-sidebar.open .projects-label {
   opacity: 1;
@@ -3998,7 +3995,6 @@ body {
   align-items: center;
   gap: 18px;
 }
-
 .organization-project-list .organization-project-card p {
   grid-column: 1 / -1;
   display: none;
@@ -4996,4 +4992,25 @@ body {
 
 .dashboard-nav-button:hover {
   background: var(--soft);
+}
+
+/* Ensure dashboard navigation titles remain visible */
+.dashboard-nav-button {
+  color: var(--ink);
+  font-size: 0.8rem;
+}
+
+.dashboard-nav-title {
+  display: block;
+  width: auto;
+  height: auto;
+  flex: 0 1 auto;
+  color: var(--ink);
+  opacity: 1;
+  visibility: visible;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  font-weight: 600;
+  overflow: visible;
+  white-space: nowrap;
 }
