@@ -997,7 +997,7 @@ function DevDock() {
           onClick={() => setOrganizationPickerOpen((current) => !current)}
           aria-expanded={organizationPickerOpen}
         >
-          <span>{organization.name}</span><span>⌄</span>
+          <span>{organization.name}</span><span>·</span>
         </button>
 
         {organizationPickerOpen && (
@@ -1041,7 +1041,7 @@ function DevDock() {
         >
           <span className="topbar-project-cube">◇</span>
           <span>{project.name}</span>
-          {projects.length > 1 && <span className="topbar-chevron">⌄</span>}
+          
         </button>}
 
         {project && <span className="topbar-branch">
@@ -1297,7 +1297,7 @@ function OrganizationHome({
             <span>⌕</span>
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search for a project" />
           </label>
-          <button type="button" className="organization-filter-button" disabled>All projects <span>⌄</span></button>
+          <button type="button" className="organization-filter-button" disabled>All projects <span>·</span></button>
           <button type="button" className={layout === 'grid' ? 'organization-view-button active' : 'organization-view-button'} onClick={() => setLayout('grid')} aria-label="Grid view">▦</button>
           <button type="button" className={layout === 'list' ? 'organization-view-button active' : 'organization-view-button'} onClick={() => setLayout('list')} aria-label="List view">≡</button>
         </div>
