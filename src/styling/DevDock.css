@@ -2340,3 +2340,562 @@
     min-height: 132px;
   }
 }
+
+
+/* Supabase-inspired product shell */
+:root {
+  --page: #fbfbfa;
+  --paper: #f7f7f5;
+  --card: #ffffff;
+  --ink: #1c1c1a;
+  --muted: #6f706b;
+  --subtle: #969791;
+  --line: #e4e5e2;
+  --soft: #f1f2ef;
+  --accent: #3ecf8e;
+  --accent-strong: #24b47e;
+  --accent-soft: #e8fbf2;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--page);
+}
+
+.devdock-app,
+.devdock-loading,
+.organization-shell {
+  background: var(--page);
+  color: var(--ink);
+}
+
+.devdock-topbar {
+  height: 64px;
+  padding: 0 16px;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid var(--line);
+  box-shadow: none;
+}
+
+.menu-button {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.menu-button span {
+  width: 18px;
+  height: 2px;
+}
+
+.brand-lockup {
+  margin-right: 10px;
+  font-size: 1.04rem;
+  letter-spacing: -0.03em;
+}
+
+.organization-area {
+  position: relative;
+}
+
+.organization-switcher {
+  min-width: 0;
+  min-height: 34px;
+  height: 34px;
+  justify-content: space-between;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #454640;
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.organization-switcher:hover,
+.organization-switcher[aria-expanded="true"] {
+  background: var(--soft);
+  border-color: var(--line);
+}
+
+.organization-popover {
+  top: calc(100% + 8px);
+  left: 0;
+  width: 280px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.topbar-project {
+  margin-left: 4px;
+  min-height: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #454640;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.topbar-project:hover {
+  background: var(--soft);
+  border-color: var(--line);
+}
+
+.topbar-project-cube {
+  color: #8c8e88;
+  font-size: 0.9rem;
+}
+
+.topbar-chevron {
+  color: #a0a19c;
+  margin-left: 2px;
+}
+
+.topbar-branch {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fafafa;
+  color: #777872;
+  font: 0.72rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.topbar-branch-icon {
+  color: #a0a19c;
+  font-size: 0.78rem;
+}
+
+.topbar-connect {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: 4px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #43443f;
+  font-size: 0.79rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.topbar-connect:hover {
+  border-color: #c9cbc6;
+  background: var(--soft);
+}
+
+.active-project-label {
+  margin-left: auto;
+  color: var(--muted);
+}
+
+.devdock-sidebar {
+  top: 64px;
+  bottom: 0;
+  width: 64px;
+  padding: 10px 8px;
+  background: #f7f7f6;
+  border-right: 1px solid var(--line);
+  box-shadow: none;
+  transform: none;
+  transition: width 0.2s ease, box-shadow 0.2s ease;
+  overflow-x: hidden;
+}
+
+.devdock-sidebar.open {
+  width: 250px;
+  transform: none;
+  box-shadow: 12px 0 28px rgba(0, 0, 0, 0.06);
+}
+
+.devdock-sidebar:not(.open) .sidebar-heading,
+.devdock-sidebar:not(.open) .sidebar-label,
+.devdock-sidebar:not(.open) .project-list,
+.devdock-sidebar:not(.open) .sidebar-switcher,
+.devdock-sidebar:not(.open) .account-block,
+.devdock-sidebar:not(.open) .signout-button {
+  display: none;
+}
+
+.devdock-sidebar:not(.open) .nav-item {
+  width: 46px;
+  justify-content: center;
+  padding: 0;
+  margin-bottom: 4px;
+  font-size: 0;
+}
+
+.devdock-sidebar:not(.open) .nav-item span {
+  width: auto;
+  font-size: 0.95rem;
+}
+
+.sidebar-heading {
+  padding: 8px 10px 20px;
+  font-size: 0.92rem;
+}
+
+.sidebar-label {
+  padding-inline: 10px;
+  color: #979892;
+  font-size: 0.64rem;
+}
+
+.nav-item,
+.project-item,
+.sidebar-switcher,
+.signout-button {
+  min-height: 38px;
+  border-radius: 8px;
+  color: #6c6d67;
+}
+
+.nav-item {
+  gap: 10px;
+  padding: 0 10px;
+  font-size: 0.79rem;
+}
+
+.nav-item span {
+  width: 18px;
+  color: #858680;
+}
+
+.nav-item:hover,
+.nav-item.active,
+.project-item:hover,
+.project-item.active,
+.sidebar-switcher:hover,
+.signout-button:hover {
+  background: #efefec;
+  color: #1f201d;
+  box-shadow: none;
+}
+
+.nav-item.active {
+  box-shadow: inset 2px 0 0 var(--accent-strong);
+}
+
+.project-item {
+  padding-left: 38px;
+  font-size: 0.78rem;
+}
+
+.projects-label {
+  margin-top: 18px;
+}
+
+.sidebar-spacer {
+  min-height: 12px;
+}
+
+.account-block {
+  padding: 12px 10px;
+  border-top-color: var(--line);
+}
+
+.sidebar-backdrop {
+  display: none;
+  background: rgba(15, 15, 14, 0.12);
+}
+
+.devdock-main {
+  max-width: none;
+  margin-left: 64px;
+  padding: 94px 40px 36px;
+}
+
+.workspace-header {
+  margin-bottom: 22px;
+}
+
+.workspace-header h1 {
+  font-size: clamp(1.9rem, 3vw, 2.45rem);
+  letter-spacing: -0.04em;
+}
+
+.workspace-header p {
+  margin-top: 4px;
+  color: #777871;
+  font-size: 0.82rem;
+}
+
+.dashboard-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-grid .dock {
+  border-radius: 10px;
+  border-color: var(--line);
+  box-shadow: none;
+  background: #ffffff;
+}
+
+.dashboard-grid .dock:hover {
+  transform: none;
+  border-color: #c7c9c4;
+  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.035);
+}
+
+.dashboard-grid .hero-dock {
+  height: 116px;
+  min-height: 116px;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.dashboard-grid .dock-title {
+  font-size: 0.8rem;
+  color: #555650;
+}
+
+.dashboard-grid .dock-icon {
+  width: 25px;
+  height: 25px;
+  border-radius: 7px;
+  background: var(--soft);
+  color: #5e605a;
+}
+
+.dashboard-grid .dock-stat {
+  margin: 15px 0 9px;
+}
+
+.dashboard-grid .dock-stat strong {
+  font-size: 1.6rem;
+  letter-spacing: -0.03em;
+}
+
+.dashboard-grid .dock-stat span {
+  color: #85867f;
+  font-size: 0.68rem;
+}
+
+.dashboard-grid .dock-list {
+  color: #777871;
+  font-size: 0.69rem;
+}
+
+.dashboard-grid .quick-dock {
+  height: 130px;
+  min-height: 130px;
+  background: #ffffff;
+}
+
+.dashboard-grid .quick-dock h3 {
+  font-size: 0.88rem;
+  letter-spacing: -0.02em;
+}
+
+.dashboard-grid .quick-dock p {
+  font-size: 0.69rem;
+  color: #7f807a;
+}
+
+.primary-button {
+  min-height: 38px;
+  border-color: var(--accent-strong);
+  background: var(--accent);
+  color: #123e2b;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  box-shadow: none;
+}
+
+.primary-button:hover:not(:disabled) {
+  opacity: 1;
+  background: var(--accent-strong);
+  border-color: var(--accent-strong);
+  color: #ffffff;
+}
+
+.notice-banner,
+.error-banner {
+  border-radius: 9px;
+  box-shadow: none;
+  font-size: 0.78rem;
+}
+
+.content-card,
+.wiki-tree-panel,
+.wiki-content-panel {
+  border-radius: 11px;
+  border-color: var(--line);
+  box-shadow: none;
+  background: #ffffff;
+}
+
+.content-card {
+  padding: 24px;
+}
+
+.section-head {
+  margin-bottom: 22px;
+}
+
+.section-head h2 {
+  font-size: 1.55rem;
+}
+
+.section-head p {
+  color: #777871;
+  font-size: 0.8rem;
+}
+
+.resource-row {
+  padding: 13px 4px;
+  border-bottom-color: var(--line);
+}
+
+.resource-row strong {
+  font-size: 0.8rem;
+}
+
+.resource-row p,
+.resource-row > span {
+  font-size: 0.69rem;
+}
+
+.table-head,
+.table-row {
+  padding: 12px 5px;
+  font-size: 0.72rem;
+}
+
+.file-picker,
+.build-upload,
+.wiki-child-create,
+.wiki-editor-toolbar,
+.wiki-history-panel,
+.wiki-markdown-preview,
+.wiki-editor > textarea,
+.wiki-editor > input,
+.wiki-toolbar input,
+.wiki-page-location {
+  border-color: var(--line);
+}
+
+.wiki-toolbar input,
+.wiki-editor > input,
+.wiki-editor > textarea {
+  background: #fbfbfa;
+}
+
+.wiki-markdown-preview {
+  background: #ffffff;
+}
+
+.wiki-tree-panel {
+  background: #fafafa;
+}
+
+.wiki-tree-item:hover,
+.wiki-tree-item.selected,
+.wiki-tree-toggle-button:hover {
+  background: #f0f1ee;
+}
+
+.wiki-tree-item.selected {
+  box-shadow: inset 2px 0 0 var(--accent-strong);
+}
+
+.wiki-tree-children {
+  border-left-color: #dcded9;
+}
+
+.wiki-breadcrumb,
+.wiki-page-location {
+  color: #8a8b84;
+}
+
+.wiki-page-header {
+  border-bottom-color: var(--line);
+}
+
+.wiki-page-header h2 {
+  letter-spacing: -0.045em;
+}
+
+.editor-mode-tabs {
+  border-color: var(--line);
+  background: #f8f8f7;
+}
+
+.editor-mode-tabs button.active,
+.editor-mode-tabs button:hover {
+  background: #ffffff;
+  color: #2b2c29;
+}
+
+@media (min-width: 1101px) {
+  .devdock-topbar {
+    height: 64px;
+  }
+
+  .devdock-sidebar {
+    top: 64px;
+  }
+
+  .devdock-main {
+    margin-left: 64px;
+    padding: 94px 40px 36px;
+  }
+}
+
+@media (max-width: 760px) {
+  .devdock-topbar {
+    height: 58px;
+    padding-inline: 10px;
+  }
+
+  .devdock-sidebar {
+    top: 58px;
+    width: 58px;
+  }
+
+  .devdock-sidebar.open {
+    width: 245px;
+  }
+
+  .devdock-main {
+    margin-left: 58px;
+    padding: 82px 16px 28px;
+  }
+
+  .brand-lockup {
+    font-size: 0.96rem;
+  }
+
+  .organization-switcher {
+    max-width: 150px;
+  }
+
+  .topbar-project,
+  .topbar-branch,
+  .topbar-connect {
+    display: none;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
