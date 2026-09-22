@@ -697,8 +697,7 @@ function DevDock() {
 
     try {
       setError('');
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('You are no longer signed in.');
+      const { data: { user } } = await supabase.auth.getUser();      if (!user) throw new Error('You are no longer signed in.');
 
       const repo = githubRepo.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/$/, '');
       const branch = githubBranch.trim() || 'main';
@@ -1101,7 +1100,6 @@ function Dashboard({
   onView: (view: View) => void;
 }) {
   const openBugs = bugs.filter((bug) => bug.status !== 'closed' && bug.status !== 'resolved').length;
-  const highPriority = bugs.filter((bug) => bug.priority === 'critical' || bug.priority === 'high').length;
 
   return (
     <div className="dashboard-grid">
