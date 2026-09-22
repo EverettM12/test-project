@@ -1322,7 +1322,7 @@ function DevDock() {
         )}
 
         {view === 'dashboard' && project && (
-          <Dashboard project={project} onView={setView} />
+          <Dashboard onView={setView} />
         )}
 
         {view === 'wiki' && (
@@ -1613,10 +1613,8 @@ function OrganizationUtilityView({  title,
 }
 
 function Dashboard({
-  project,
   onView,
 }: {
-  project: Project | null;
   onView: (view: View) => void;
 }) {
   return (
