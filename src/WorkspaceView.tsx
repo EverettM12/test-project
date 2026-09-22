@@ -665,7 +665,7 @@ function WorkspaceView({
   }
 
   if (loading) {
-    return <div className="workspace-management-loading">Loading workspace management...</div>;
+    return <div className="workspace-management-loading">Loading organization settings...</div>;
   }
 
   return (
