@@ -964,11 +964,12 @@ function DevDock() {
   }
 
   async function loadGithubOverview(targetProject: Project | null = project) {
+    const projectId = targetProject?.id;
     const repo = targetProject?.github_repo?.trim()
       .replace(/^https?:\/\/github\.com\//, '')
       .replace(/\/$/, '');
 
-    if (!repo || !/^[^/]+\/[^/]+$/.test(repo)) {
+    if (!projectId || !repo || !/^[^/]+\/[^/]+$/.test(repo)) {
       setGithubOverview(null);
       setGithubOverviewError('Enter a GitHub repository in owner/repository format.');
       return;
@@ -999,7 +1000,7 @@ function DevDock() {
         return;
       } catch {
         const { data, error: functionError } = await supabase.functions.invoke('github-private-overview-v2', {
-          body: { project_id: targetProject.id },
+          body: { project_id: projectId },
         });
 
         if (functionError) {
