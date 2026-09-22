@@ -44,6 +44,7 @@ type WorkspaceViewProps = {
   onProjectsUpdated: (projects: Project[]) => void;
   onOrganizationUpdated: (organization: Organization) => void;
   onOrganizationDeleted: () => void;
+  initialSection?: Section;
 };
 
 function formatDate(value: string): string {
@@ -69,8 +70,13 @@ function WorkspaceView({
   onProjectsUpdated,
   onOrganizationUpdated,
   onOrganizationDeleted,
+  initialSection = 'overview',
 }: WorkspaceViewProps) {
-  const [section, setSection] = useState<Section>('overview');
+  const [section, setSection] = useState<Section>(initialSection);
+
+  useEffect(() => {
+    setSection(initialSection);
+  }, [initialSection]);
   const [role, setRole] = useState<Member['role']>('viewer');
   const [members, setMembers] = useState<Member[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -219,7 +225,7 @@ function WorkspaceView({
         setError(
           workspaceError instanceof Error
             ? workspaceError.message
-            : 'Could not load workspace management.',
+            : 'Could not load organization settings.',
         );
       } finally {
         setLoading(false);
@@ -285,7 +291,7 @@ function WorkspaceView({
       setError(updateError?.message ?? 'Could not update organization.');
     } else {
       onOrganizationUpdated(data as Organization);
-      setNotice('Workspace details saved.');
+      setNotice('Organization details saved.');
     }
 
     setWorking(false);
@@ -707,14 +713,14 @@ function WorkspaceView({
               <div>
                 <span className="dock-kicker">ORGANIZATION</span>
                 <h2>{organization.name}</h2>
-                <p>Your organization's identity and workspace ownership.</p>
+                <p>Your organization's identity and ownership.</p>
               </div>
               <span className="workspace-role-badge">{role}</span>
             </div>
 
             <div className="workspace-form-grid">
               <label>
-                Workspace name
+                Organization name
                 <input
                   value={organizationName}
                   onChange={(event) => setOrganizationName(event.target.value)}
@@ -722,7 +728,7 @@ function WorkspaceView({
                 />
               </label>
               <label>
-                Workspace slug
+                Organization slug
                 <input
                   value={organizationSlug}
                   onChange={(event) => setOrganizationSlug(event.target.value)}
@@ -733,7 +739,7 @@ function WorkspaceView({
 
             {canManageOrganization && (
               <button type="button" className="primary-button" disabled={working} onClick={() => void saveOrganization()}>
-                {working ? 'Saving...' : 'Save workspace'}
+                {working ? 'Saving...' : 'Save organization'}
               </button>
             )}
           </section>
@@ -750,7 +756,7 @@ function WorkspaceView({
           <section className="workspace-card">
             <span className="dock-kicker">MEMBERS</span>
             <strong className="workspace-big-number">{members.length}</strong>
-            <span className="workspace-card-muted">people in workspace</span>
+            <span className="workspace-card-muted">people in organization</span>
             <button type="button" className="workspace-card-link" onClick={() => setSection('members')}>
               Manage members →
             </button>
@@ -832,7 +838,7 @@ function WorkspaceView({
             {projects.length === 0 && (
               <div className="workspace-empty">
                 <strong>No projects yet.</strong>
-                <span>Create a project to start a development workspace inside this organization.</span>
+                <span>Create a project to start working inside this organization.</span>
               </div>
             )}
           </div>
@@ -890,7 +896,7 @@ function WorkspaceView({
           <section className="workspace-card">
             <span className="dock-kicker">INVITE</span>
             <h3>Invite someone</h3>
-            <p>Add a person to this workspace by email. The invitation can be accepted when they sign in.</p>
+            <p>Add a person to this organization by email. The invitation can be accepted when they sign in.</p>
 
             {canManageOrganization && (
               <>
@@ -953,9 +959,9 @@ function WorkspaceView({
       {section === 'danger' && isOwner && (
         <section className="workspace-card workspace-danger-card">
           <span className="dock-kicker">DANGER ZONE</span>
-          <h2>Delete this workspace</h2>
+          <h2>Delete this organization</h2>
           <p>
-            This removes the organization and its projects, documentation, issues, builds,
+            This removes the organization and all of its projects, documentation, issues, builds,
             connections, timeline events, and memberships.
           </p>
           <button type="button" className="danger-button danger-button-large" disabled={working} onClick={() => void deleteOrganization()}>
