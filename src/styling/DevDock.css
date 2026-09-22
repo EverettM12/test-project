@@ -2146,3 +2146,197 @@
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Compact dashboard / overview */
+.dashboard-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  align-content: start;
+}
+
+.dashboard-grid .dock {
+  min-height: 0;
+  height: 150px;
+  padding: 20px 22px;
+  border-radius: 18px;
+}
+
+.dashboard-grid .hero-dock {
+  grid-column: 1 / -1;
+  height: 128px;
+  min-height: 0;
+  align-items: center;
+  padding: 22px 26px;
+}
+
+.dashboard-grid .hero-dock h2 {
+  margin: 5px 0;
+  font-size: 1.75rem;
+}
+
+.dashboard-grid .hero-dock p {
+  max-width: 780px;
+  margin: 5px 0 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.dashboard-grid .hero-dock .primary-button {
+  min-height: 42px;
+  flex: 0 0 auto;
+}
+
+.dashboard-grid .dock-title {
+  font-size: 0.88rem;
+}
+
+.dashboard-grid .dock-icon {
+  width: 27px;
+  height: 27px;
+}
+
+.dashboard-grid .dock-stat {
+  margin: 18px 0 12px;
+}
+
+.dashboard-grid .dock-stat strong {
+  font-size: 1.8rem;
+}
+
+.dashboard-grid .dock-stat span {
+  font-size: 0.72rem;
+}
+
+.dashboard-grid .dock-list {
+  gap: 5px;
+  font-size: 0.72rem;
+}
+
+.dashboard-grid .quick-dock {
+  grid-column: auto;
+  height: 150px;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  padding: 20px 22px;
+}
+
+.dashboard-grid .quick-dock h3 {
+  margin: 4px 0;
+  font-size: 0.96rem;
+}
+
+.dashboard-grid .quick-dock p {
+  max-width: 360px;
+  margin: 4px 0 0;
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.dashboard-grid .quick-actions {
+  gap: 6px;
+}
+
+.dashboard-grid .quick-actions button {
+  min-height: 36px;
+  padding-inline: 10px;
+  font-size: 0.72rem;
+}
+
+.workspace-header {
+  margin-bottom: 22px;
+}
+
+.workspace-header h1 {
+  font-size: clamp(1.9rem, 3vw, 2.65rem);
+}
+
+.workspace-header p {
+  margin-top: 4px;
+  font-size: 0.84rem;
+}
+
+@media (min-width: 1101px) {
+  .devdock-topbar {
+    height: 72px;
+    padding-inline: 24px;
+  }
+
+  .devdock-main {
+    max-width: none;
+    padding: 104px 48px 34px;
+  }
+
+  .devdock-sidebar {
+    top: 72px;
+  }
+
+  .sidebar-backdrop {
+    inset: 72px 0 0;
+  }
+}
+
+@media (max-height: 820px) and (min-width: 1101px) {
+  .devdock-main {
+    padding-top: 96px;
+    padding-bottom: 22px;
+  }
+
+  .workspace-header {
+    margin-bottom: 16px;
+  }
+
+  .dashboard-grid {
+    gap: 11px;
+  }
+
+  .dashboard-grid .dock {
+    height: 128px;
+    padding: 17px 19px;
+  }
+
+  .dashboard-grid .hero-dock {
+    height: 112px;
+  }
+
+  .dashboard-grid .quick-dock {
+    height: 128px;
+  }
+
+  .dashboard-grid .dock-stat {
+    margin: 13px 0 8px;
+  }
+
+  .dashboard-grid .dock-stat strong {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-grid .hero-dock {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-grid .hero-dock,
+  .dashboard-grid .quick-dock {
+    grid-column: auto;
+  }
+
+  .dashboard-grid .dock,
+  .dashboard-grid .quick-dock,
+  .dashboard-grid .hero-dock {
+    height: auto;
+    min-height: 132px;
+  }
+}
