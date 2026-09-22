@@ -62,6 +62,14 @@
   border-width: 1.5px;
   border-style: solid;
   color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.auth-company-button svg {
+  flex: 0 0 auto;
 }
 
 .auth-github {
