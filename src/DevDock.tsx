@@ -9,7 +9,7 @@ type Organization = { id: string; name: string; slug: string; created_by: string
 type Project = { id: string; name: string; slug: string; description: string; github_repo: string | null; github_branch: string };
 type Bug = { id: string; title: string; status: string; priority: string; created_at: string };
 type Build = { id: string; version: string; branch: string; original_filename: string | null; file_size: number | null; created_at: string; storage_path: string | null };
-type WikiPage = { id: string; title: string; slug: string; content: string; parent_id: string | null; updated_at: string };
+type WikiPage = { id: string; title: string; slug: string; content: string; parent_id: string | null; sort_order: number; updated_at: string };
 type TimelineEvent = { id: string; event_type: string; title: string; description: string; created_at: string };
 
 const views: Array<{ id: View; label: string; icon: string }> = [
@@ -326,7 +326,7 @@ function DevDock() {
   }
 
   async function addWikiPage(parentId: string | null = null, requestedTitle?: string): Promise<WikiPage | null> {
-    const title = (requestedTitle ?? newWiki).trim();
+    const title = requestedTitle?.trim() ?? '';
 
     if (!project || !title) {
       return null;
@@ -377,7 +377,6 @@ function DevDock() {
       const page = data as WikiPage;
       setWikiPages((current) => [...current, page]);
       selectWikiPage(page);
-      setNewWiki('');
       await addTimeline('wiki', `Wiki page created: ${title}`);
       return page;
     } catch (wikiError) {
@@ -491,7 +490,7 @@ function DevDock() {
       }
 
       if (targetId) {
-        let ancestor: WikiPage | undefined = target;
+        let ancestor: WikiPage | null = target;
         while (ancestor?.parent_id) {
           if (ancestor.parent_id === pageId) {
             setError('A page cannot be moved inside one of its own children.');
