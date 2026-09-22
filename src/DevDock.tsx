@@ -1037,7 +1037,7 @@ function DevDock() {
                 <span className="organization-picker-card-icon">◇</span>
                 <span className="organization-picker-card-info">
                   <strong>{item.name}</strong>
-                  <span>Free Plan · {organizationProjectCounts[item.id] ?? 0} projects</span>
+                  <span>{organizationProjectCounts[item.id] ?? 0} projects</span>
                 </span>
                 <span className="organization-picker-card-arrow">→</span>
               </button>
@@ -1230,7 +1230,7 @@ function DevDock() {
         <button type="button" className="sidebar-backdrop" aria-label="Close navigation" onClick={() => setMenuOpen(false)} />
       )}
 
-      <main className="devdock-main">
+      <main className={project ? 'devdock-main project-mode' : 'devdock-main'}>
         {(project || view !== 'organization') && (
           <div className="workspace-header">
             <div>
@@ -1531,7 +1531,7 @@ function Dashboard({
 
   return (
     <div className="dashboard-grid">
-      <section className="dock hero-dock">
+      <section className="dashboard-project-header">
         <div>
           <span className="dock-kicker">ACTIVE PROJECT</span>
           <h2>{project?.name ?? 'No project'}</h2>
@@ -1540,25 +1540,21 @@ function Dashboard({
         <button type="button" className="primary-button" onClick={() => onView('timeline')}>View activity</button>
       </section>
 
-      <DashboardDock title="Wiki" icon={<WikiIcon size={18} />} value={String(wikiPages.length)} detail="pages" onClick={() => onView('wiki')} />
+      <div className="dashboard-nav-grid">
+        <DashboardNavButton title="Wiki" icon={<WikiIcon size={18} />} onClick={() => onView('wiki')} />
+        <DashboardNavButton title="Bug Tracker" icon="!" onClick={() => onView('bugs')} />
+        <DashboardNavButton title="Builds" icon="↥" onClick={() => onView('builds')} />
+        <DashboardNavButton title="GitHub" icon={<GithubIcon size={18} />} onClick={() => onView('github')} />
+        <DashboardNavButton title="Timeline" icon="↯" onClick={() => onView('timeline')} />
+        <DashboardNavButton title="Report bug" icon="+" onClick={() => onView('bugs')} />
+      </div>
 
-      <DashboardDock title="Bug Tracker" icon="!" value={String(openBugs)} detail="open bugs" onClick={() => onView('bugs')} />
-
-      <DashboardDock title="Builds" icon="↥" value={String(builds.length)} detail="uploaded" onClick={() => onView('builds')} />
-
-      <DashboardDock title="GitHub" icon={<GithubIcon size={18} />} value={project?.github_repo ? 'Connected' : 'Not connected'} detail="repository" onClick={() => onView('github')} />
-
-      <DashboardDock title="Timeline" icon="↯" value={String(timeline.length)} detail="recent events" onClick={() => onView('timeline')}>
-        
-      </DashboardDock>
-
-      <section className="dock quick-dock">
+      <section className="dashboard-workflow">
         <div>
           <span className="dock-kicker">WORKFLOW</span>
           <h3>Your project is ready to work on.</h3>
         </div>
         <div className="quick-actions">
-          <button type="button" onClick={() => onView('bugs')}>Report bug</button>
           <button type="button" onClick={() => onView('builds')}>Upload build</button>
           <button type="button" onClick={() => onView('wiki')}>Write docs</button>
         </div>
@@ -1567,19 +1563,17 @@ function Dashboard({
   );
 }
 
-function DashboardDock({
-  title, icon, value, detail, onClick,
+function DashboardNavButton({
+  title, icon, onClick,
 }: {
   title: string;
   icon: ReactNode;
-  value: string;
-  detail: string;
   onClick: () => void;
 }) {
   return (
-    <button type="button" className="dock dashboard-dock" onClick={onClick}>
-      <div className="dock-title"><span className="dock-icon">{icon}</span><span>{title}</span><span className="dock-arrow">→</span></div>
-      <div className="dock-stat"><strong>{value}</strong><span>{detail}</span></div>
+    <button type="button" className="dashboard-nav-button" onClick={onClick}>
+      <span className="dashboard-nav-icon">{icon}</span>
+      <span className="dashboard-nav-title">{title}</span>
     </button>
   );
 }
