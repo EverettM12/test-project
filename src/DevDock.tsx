@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { supabase } from './utils/supabase.ts';
 import WikiView from './WikiView.tsx';
+import WorkspaceView from './WorkspaceView.tsx';
 import './styling/DevDock.css';
 
-type View = 'dashboard' | 'wiki' | 'bugs' | 'builds' | 'github' | 'timeline';
+type View = 'dashboard' | 'wiki' | 'bugs' | 'builds' | 'github' | 'timeline' | 'workspace';
 
 type Organization = { id: string; name: string; slug: string; created_by: string };
 type Project = { id: string; name: string; slug: string; description: string; github_repo: string | null; github_branch: string };
@@ -11,6 +12,7 @@ type Bug = { id: string; title: string; status: string; priority: string; create
 type Build = { id: string; version: string; branch: string; original_filename: string | null; file_size: number | null; created_at: string; storage_path: string | null };
 type WikiPage = { id: string; title: string; slug: string; content: string; parent_id: string | null; sort_order: number; updated_at: string };
 type TimelineEvent = { id: string; event_type: string; title: string; description: string; created_at: string };
+type IncomingInvitation = { id: string; organization_id: string; organization_name: string; email: string; role: 'admin' | 'developer' | 'tester' | 'viewer'; expires_at: string };
 
 const views: Array<{ id: View; label: string; icon: string }> = [
   { id: 'dashboard', label: 'Dashboard', icon: '⌂' },
@@ -50,6 +52,7 @@ function DevDock() {
   const organizationAreaRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [incomingInvitations, setIncomingInvitations] = useState<IncomingInvitation[]>([]);
 
   const [bugs, setBugs] = useState<Bug[]>([]);
   const [builds, setBuilds] = useState<Build[]>([]);
@@ -69,7 +72,7 @@ function DevDock() {
   const [githubBranch, setGithubBranch] = useState('main');
 
   const activeView = useMemo(
-    () => views.find((item) => item.id === view)?.label ?? 'Dashboard',
+    () => view === 'workspace' ? 'Workspace' : views.find((item) => item.id === view)?.label ?? 'Dashboard',
     [view],
   );
 
@@ -109,7 +112,10 @@ function DevDock() {
                 : 'there';
         const name = preferredName.startsWith('Everett') ? 'Everett' : preferredName.split('#')[0];
         setDisplayName(name);
-        await loadOrganizations(user.id);
+        await Promise.all([
+          loadOrganizations(user.id),
+          loadIncomingInvitations(user.email ?? ''),
+        ]);
       } catch (initializeError) {
         setError(initializeError instanceof Error ? initializeError.message : 'Could not load your workspace.');
       } finally {
@@ -119,6 +125,72 @@ function DevDock() {
 
     void initialize();
   }, []);
+
+  async function loadIncomingInvitations(userEmail: string) {
+    if (!userEmail) {
+      setIncomingInvitations([]);
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('workspace_invitations')
+      .select('id,organization_id,email,role,expires_at,organizations(name)')
+      .eq('status', 'pending')
+      .ilike('email', userEmail)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      setIncomingInvitations([]);
+      return;
+    }
+
+    setIncomingInvitations(
+      (data ?? []).map((invitation: any) => ({
+        id: invitation.id,
+        organization_id: invitation.organization_id,
+        organization_name: invitation.organizations?.name ?? 'Workspace invitation',
+        email: invitation.email,
+        role: invitation.role,
+        expires_at: invitation.expires_at,
+      })) as IncomingInvitation[],
+    );
+  }
+
+  async function acceptIncomingInvitation(invitation: IncomingInvitation) {
+    try {
+      setError('');
+      setMessage('');
+
+      const { error } = await supabase.rpc('accept_workspace_invitation', {
+        p_invitation_id: invitation.id,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await loadOrganizations(user.id);
+        await loadIncomingInvitations(user.email ?? '');
+      }
+
+      const joined = organizations.find((item) => item.id === invitation.organization_id);
+
+      if (joined) {
+        await enterOrganization(joined);
+      }
+
+      setMessage(`Joined ${invitation.organization_name}.`);
+    } catch (invitationError) {
+      setError(
+        invitationError instanceof Error
+          ? invitationError.message
+          : 'Could not accept invitation.',
+      );
+    }
+  }
 
   async function loadOrganizations(userId: string) {
     const { data: created, error: createdError } = await supabase
@@ -255,7 +327,7 @@ function DevDock() {
     const [bugsResult, buildsResult, wikiResult, timelineResult] = await Promise.all([
       supabase.from('bugs').select('id,title,status,priority,created_at').eq('project_id', nextProject.id).order('created_at', { ascending: false }),
       supabase.from('builds').select('id,version,branch,original_filename,file_size,created_at,storage_path').eq('project_id', nextProject.id).order('created_at', { ascending: false }),
-      supabase.from('wiki_pages').select('id,title,slug,content,parent_id,updated_at').eq('project_id', nextProject.id).order('updated_at', { ascending: false }),
+      supabase.from('wiki_pages').select('id,title,slug,content,parent_id,sort_order,updated_at').eq('project_id', nextProject.id).order('sort_order', { ascending: true }),
       supabase.from('timeline_events').select('id,event_type,title,description,created_at').eq('project_id', nextProject.id).order('created_at', { ascending: false }).limit(50),
     ]);
 
@@ -689,6 +761,40 @@ function DevDock() {
     setMenuOpen(false);
   }
 
+  function handleProjectsUpdated(nextProjects: Project[]) {
+    setProjects(nextProjects);
+  }
+
+  function handleOrganizationUpdated(nextOrganization: Organization) {
+    setOrganization(nextOrganization);
+    setOrganizations((current) =>
+      current.map((item) => item.id === nextOrganization.id ? nextOrganization : item),
+    );
+  }
+
+  async function handleOrganizationDeleted() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    setOrganization(null);
+    setProject(null);
+    setProjects([]);
+    setBugs([]);
+    setBuilds([]);
+    setWikiPages([]);
+    setTimeline([]);
+    setSelectedWiki(null);
+    setView('dashboard');
+
+    if (user) {
+      await loadOrganizations(user.id);
+      await loadIncomingInvitations(user.email ?? '');
+    }
+
+    setMessage('Workspace deleted.');
+  }
+
   if (loading) {
     return <div className="devdock-loading">Loading DevDock...</div>;
   }
@@ -716,7 +822,28 @@ function DevDock() {
                 <span className="organization-arrow">→</span>
               </button>
             ))}
-            {organizations.length === 0 && (
+            {incomingInvitations.length > 0 && (
+              <div className="incoming-invitations">
+                <span className="eyebrow">INVITATIONS</span>
+                {incomingInvitations.map((invitation) => (
+                  <article className="incoming-invitation" key={invitation.id}>
+                    <div>
+                      <strong>{invitation.organization_name}</strong>
+                      <span>{invitation.role} · expires {formatDate(invitation.expires_at)}</span>
+                    </div>
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={() => void acceptIncomingInvitation(invitation)}
+                    >
+                      Accept
+                    </button>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            {organizations.length === 0 && incomingInvitations.length === 0 && (
               <div className="organization-empty">
                 <strong>No organizations yet.</strong>
                 <span>Create your first workspace below.</span>
@@ -776,6 +903,16 @@ function DevDock() {
                 {item.name}{item.id === organization.id && <span>✓</span>}
               </button>
             ))}
+            <button
+              type="button"
+              className="organization-popover-action"
+              onClick={() => {
+                setView('workspace');
+                setOrganizationPickerOpen(false);
+              }}
+            >
+              Manage workspace
+            </button>
             <button type="button" className="organization-popover-action" onClick={switchOrganization}>
               Choose from workspace screen
             </button>
@@ -849,7 +986,22 @@ function DevDock() {
 
         <div className="sidebar-spacer" />
 
-        <button type="button" className="sidebar-switcher" onClick={switchOrganization}>Switch organization</button>
+        <button
+          type="button"
+          className="sidebar-switcher"
+          onClick={() => {
+            setView('workspace');
+            setMenuOpen(false);
+            setError('');
+            setMessage('');
+          }}
+        >
+          Manage workspace
+        </button>
+
+        <button type="button" className="sidebar-switcher" onClick={switchOrganization}>
+          Switch organization
+        </button>
 
         <div className="account-block">
           <strong>{displayName}</strong><span>{email || 'Signed in'}</span>
@@ -934,6 +1086,18 @@ function DevDock() {
         )}
 
         {view === 'timeline' && <TimelineView events={timeline} />}
+
+        {view === 'workspace' && organization && (
+          <WorkspaceView
+            organization={organization}
+            projects={projects}
+            currentProjectId={project?.id ?? null}
+            onSelectProject={selectProject}
+            onProjectsUpdated={handleProjectsUpdated}
+            onOrganizationUpdated={handleOrganizationUpdated}
+            onOrganizationDeleted={() => void handleOrganizationDeleted()}
+          />
+        )}
       </main>
     </div>
   );
