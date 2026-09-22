@@ -1152,14 +1152,13 @@ function Dashboard({
 }
 
 function DashboardDock({
-  title, icon, value, detail, onClick, children,
+  title, icon, value, detail, onClick,
 }: {
   title: string;
   icon: string;
   value: string;
   detail: string;
   onClick: () => void;
-  children: React.ReactNode;
 }) {
   return (
     <button type="button" className="dock dashboard-dock" onClick={onClick}>
