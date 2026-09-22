@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from './utils/supabase.ts';
 
 type Organization = {
@@ -107,11 +107,6 @@ function WorkspaceView({
   const canManageOrganization = role === 'owner' || role === 'admin';
   const canManageProjects = role === 'owner' || role === 'admin' || role === 'developer';
   const isOwner = role === 'owner';
-
-  const projectCountText = useMemo(
-    () => `${projects.length} project${projects.length === 1 ? '' : 's'}`,
-    [projects.length],
-  );
 
   useEffect(() => {
     setOrganizationName(organization.name);
