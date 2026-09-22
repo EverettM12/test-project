@@ -1272,7 +1272,6 @@ function DevDock() {
         {(project || view !== 'organization') && (
           <div className="workspace-header">
             <div>
-              <span className="eyebrow">{organization.name}</span>
               <h1>{view === 'dashboard' ? `Welcome, ${displayName}.` : activeView}</h1>
               <p>{project?.name ?? 'Select a project to begin working inside the organization.'}</p>
             </div>
@@ -1622,14 +1621,6 @@ function Dashboard({
 }) {
   return (
     <div className="dashboard-grid">
-      <section className="dashboard-project-header">
-        <div>
-          <span className="dock-kicker">ACTIVE PROJECT</span>
-          <h2>{project?.name ?? 'No project'}</h2>
-          {project?.description && <p>{project.description}</p>}
-        </div>
-      </section>
-
       <div className="dashboard-nav-grid">
         <DashboardNavButton title="Wiki" icon={<WikiIcon size={18} />} onClick={() => onView('wiki')} />
         <DashboardNavButton title="Bug Tracker" icon="!" onClick={() => onView('bugs')} />
