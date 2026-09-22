@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type DragEvent } from 'react';
+import { useEffect, useMemo, useState, type DragEvent, type ReactElement } from 'react';
 import { supabase } from './utils/supabase.ts';
 
 export type WikiPage = {
@@ -674,7 +674,7 @@ function getBreadcrumb(page: WikiPage, pages: WikiPage[]): WikiPage[] {
 function MarkdownRenderer({ markdown }: { markdown: string }) {
   const normalized = markdown.replace(/\\n/g, '\n').replace(/\r\n/g, '\n');
   const lines = normalized.split('\n');
-  const blocks: React.ReactElement[] = [];
+  const blocks: ReactElement[] = [];
   const fence = String.fromCharCode(96).repeat(3);
   let index = 0;
 
