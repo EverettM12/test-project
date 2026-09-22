@@ -1266,6 +1266,8 @@ function DevDock() {
             onProjectsUpdated={handleProjectsUpdated}
             onOrganizationUpdated={handleOrganizationUpdated}
             onOrganizationDeleted={() => void handleOrganizationDeleted()}
+            accentColor={accentColor}
+            onAccentColorChange={changeAccentColor}
           />
         )}
       </main>
@@ -1495,3 +1497,192 @@ function DashboardDock({
     </button>
   );
 }
+
+          <h3>Your project is ready to work on.</h3>
+        </div>
+        <div className="quick-actions">
+          <button type="button" onClick={() => onView('bugs')}>Report bug</button>
+          <button type="button" onClick={() => onView('builds')}>Upload build</button>
+          <button type="button" onClick={() => onView('wiki')}>Write docs</button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function DashboardDock({
+  title, icon, value, detail, onClick,
+}: {
+  title: string;
+  icon: ReactNode;
+  value: string;
+  detail: string;
+  onClick: () => void;
+}) {
+  return (
+    <button type="button" className="dock dashboard-dock" onClick={onClick}>
+      <div className="dock-title"><span className="dock-icon">{icon}</span><span>{title}</span><span className="dock-arrow">→</span></div>
+      <div className="dock-stat"><strong>{value}</strong><span>{detail}</span></div>
+    </button>
+  );
+}
+
+function BugsView({
+  bugs, value, onChange, onCreate,
+}: {
+  bugs: Bug[];
+  value: string;
+  onChange: (value: string) => void;
+  onCreate: () => void;
+}) {
+  return (
+    <section className="content-card">
+      <div className="section-head">
+        <div>
+          <span className="dock-kicker">TRACKING</span>
+          <h2>Bug Tracker</h2>
+          <p>Start small with status and priority. The issue model is ready to grow into full test reports.</p>
+        </div>
+        <div className="inline-create">
+          <input value={value} onChange={(event) => onChange(event.target.value)} placeholder="Describe the bug" onKeyDown={(event) => { if (event.key === 'Enter') onCreate(); }} />
+          <button type="button" className="primary-button" onClick={onCreate}>Report</button>
+        </div>
+      </div>
+      <div className="bug-table">
+        <div className="table-head"><span>Issue</span><span>Status</span><span>Priority</span><span>Created</span></div>
+        {bugs.map((bug) => (
+          <div className="table-row" key={bug.id}>
+            <strong>{bug.title}</strong>
+            <span className="status-pill">{bug.status.replace('_', ' ')}</span>
+            <span className={`priority-pill ${bug.priority}`}>{bug.priority}</span>
+            <span>{formatDate(bug.created_at)}</span>
+          </div>
+        ))}
+        {bugs.length === 0 && <EmptyState title="No bugs reported" detail="Your first issue will appear here." />}
+      </div>
+    </section>
+  );
+}
+
+function BuildsView({
+  builds, version, branch, file, uploading, onVersion, onBranch, onFile, onUpload, onDownload,
+}: {
+  builds: Build[];
+  version: string;
+  branch: string;
+  file: File | null;
+  uploading: boolean;
+  onVersion: (value: string) => void;
+  onBranch: (value: string) => void;
+  onFile: (event: ChangeEvent<HTMLInputElement>) => void;
+  onUpload: () => void;
+  onDownload: (build: Build) => void;
+}) {
+  return (
+    <section className="content-card">
+      <div className="section-head">
+        <div>
+          <span className="dock-kicker">ARTIFACTS</span>
+          <h2>Builds</h2>
+          <p>Upload the actual Windows build you want to hand to testers.</p>
+        </div>
+      </div>
+      <div className="build-upload">
+        <input value={version} onChange={(event) => onVersion(event.target.value)} placeholder="Version" />
+        <input value={branch} onChange={(event) => onBranch(event.target.value)} placeholder="Branch" />
+        <label className="file-picker">
+          <input type="file" accept=".exe,.zip,.7z" onChange={onFile} />
+          <span>{file?.name ?? 'Choose .exe / .zip / .7z'}</span>
+          {file && <small>{formatSize(file.size)}</small>}
+        </label>
+        <button type="button" className="primary-button" disabled={!file || uploading} onClick={onUpload}>
+          {uploading ? 'Uploading...' : 'Upload build'}
+        </button>
+      </div>
+      <div className="resource-list">
+        {builds.map((build) => (
+          <article className="resource-row build-resource-row" key={build.id}>
+            <div><strong>v{build.version}</strong><p>{build.original_filename ?? 'Build artifact'} · {formatSize(build.file_size)} · {build.branch}</p></div>
+            <div className="build-actions"><span>{formatDate(build.created_at)}</span><button type="button" onClick={() => onDownload(build)}>Download</button></div>
+          </article>
+        ))}
+        {builds.length === 0 && <EmptyState title="No builds uploaded" detail="Upload an executable or archive to start keeping tester-ready builds here." />}
+      </div>
+    </section>
+  );
+}
+
+function GithubView({
+  repo, branch, project, onRepo, onBranch, onSave,
+}: {
+  repo: string;
+  branch: string;
+  project: Project | null;
+  onRepo: (value: string) => void;
+  onBranch: (value: string) => void;
+  onSave: () => void;
+}) {
+  return (
+    <section className="content-card">
+      <div className="section-head">
+        <div>
+          <span className="dock-kicker">SOURCE CONTROL</span>
+          <h2>GitHub Integration</h2>
+          <p>Connect the repository for this project. The live commits, branches, pull requests, and issue panels can plug into this connection next.</p>
+        </div>
+      </div>
+      <div className="github-form">
+        <label>Repository<input value={repo} onChange={(event) => onRepo(event.target.value)} placeholder="EverettM12/currentgame" /></label>
+        <label>Default branch<input value={branch} onChange={(event) => onBranch(event.target.value)} placeholder="main" /></label>
+        <button type="button" className="primary-button" onClick={onSave}>Save connection</button>
+      </div>
+      {project?.github_repo && (
+        <div className="github-connected">
+          <span className="connected-dot" />
+          <strong>{project.github_repo}</strong>
+          <span>{project.github_branch}</span>
+          <a href={`https://github.com/${project.github_repo}`} target="_blank" rel="noreferrer">Open on GitHub →</a>
+        </div>
+      )}
+      <div className="integration-grid">
+        <Integration title="Commits" detail="Live activity dock ready" />
+        <Integration title="Branches" detail="Branch browser ready" />
+        <Integration title="Pull requests" detail="PR panel ready" />
+        <Integration title="Issues" detail="GitHub issue sync ready" />
+      </div>
+    </section>
+  );
+}
+
+function Integration({ title, detail }: { title: string; detail: string }) {
+  return <div className="integration-card"><strong>{title}</strong><span>{detail}</span><small>Skeleton</small></div>;
+}
+
+function TimelineView({ events }: { events: TimelineEvent[] }) {
+  return (
+    <section className="content-card">
+      <div className="section-head">
+        <div>
+          <span className="dock-kicker">PROJECT HISTORY</span>
+          <h2>Timeline</h2>
+          <p>One chronological place to see what changed, when it changed, and what was worked on.</p>
+        </div>
+      </div>
+      <div className="timeline">
+        {events.map((event) => (
+          <article className="timeline-event" key={event.id}>
+            <span className="timeline-dot" />
+            <div><span>{formatDate(event.created_at)} · {event.event_type}</span><h3>{event.title}</h3>{event.description && <p>{event.description}</p>}</div>
+          </article>
+        ))}
+        {events.length === 0 && <EmptyState title="Timeline is empty" detail="Project activity will appear here as you work." />}
+      </div>
+    </section>
+  );
+}
+
+function EmptyState({ title, detail }: { title: string; detail: string }) {
+  return <div className="empty-state"><strong>{title}</strong><span>{detail}</span></div>;
+}
+
+export default DevDock;
