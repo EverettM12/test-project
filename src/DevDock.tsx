@@ -497,8 +497,7 @@ function DevDock() {
       if (!user) throw new Error('You are no longer signed in.');
 
       const generatedSlug = slugify(trimmedName);
-      const slug = generatedSlug || `project-${crypto.randomUUID().slice(0, 6)}`;
-      const { data, error: insertError } = await supabase
+      const slug = generatedSlug || `project-${crypto.randomUUID().slice(0, 6)}`;      const { data, error: insertError } = await supabase
         .from('projects')
         .insert({
           organization_id: organization.id,
@@ -997,7 +996,6 @@ function DevDock() {
             >
               <span>＋</span> New organization
             </button>          </div>
-
           {newOrganizationOpen && (
             <form
               className="organization-picker-create"
@@ -1296,7 +1294,7 @@ function DevDock() {
         )}
 
         {view === 'dashboard' && project && (
-          <Dashboard project={project} bugs={bugs} builds={builds} wikiPages={wikiPages} timeline={timeline} onView={setView} />
+          <Dashboard project={project} onView={setView} />
         )}
 
         {view === 'wiki' && (
@@ -1497,8 +1495,7 @@ function OrganizationNewProjectForm({
 
 function OrganizationUtilityView({  title,
   kicker,
-  description,
-  children,
+  description,  children,
 }: {
   title: string;
   kicker: string;
@@ -1518,17 +1515,12 @@ function OrganizationUtilityView({  title,
 }
 
 function Dashboard({
-  project, bugs, builds, wikiPages, timeline, onView,
+  project,
+  onView,
 }: {
   project: Project | null;
-  bugs: Bug[];
-  builds: Build[];
-  wikiPages: WikiPage[];
-  timeline: TimelineEvent[];
   onView: (view: View) => void;
 }) {
-  const openBugs = bugs.filter((bug) => bug.status !== 'closed' && bug.status !== 'resolved').length;
-
   return (
     <div className="dashboard-grid">
       <section className="dashboard-project-header">
@@ -1537,7 +1529,6 @@ function Dashboard({
           <h2>{project?.name ?? 'No project'}</h2>
           <p>{project?.description || 'This project is ready for development.'}</p>
         </div>
-        <button type="button" className="primary-button" onClick={() => onView('timeline')}>View activity</button>
       </section>
 
       <div className="dashboard-nav-grid">
@@ -1546,19 +1537,7 @@ function Dashboard({
         <DashboardNavButton title="Builds" icon="↥" onClick={() => onView('builds')} />
         <DashboardNavButton title="GitHub" icon={<GithubIcon size={18} />} onClick={() => onView('github')} />
         <DashboardNavButton title="Timeline" icon="↯" onClick={() => onView('timeline')} />
-        <DashboardNavButton title="Report bug" icon="+" onClick={() => onView('bugs')} />
       </div>
-
-      <section className="dashboard-workflow">
-        <div>
-          <span className="dock-kicker">WORKFLOW</span>
-          <h3>Your project is ready to work on.</h3>
-        </div>
-        <div className="quick-actions">
-          <button type="button" onClick={() => onView('builds')}>Upload build</button>
-          <button type="button" onClick={() => onView('wiki')}>Write docs</button>
-        </div>
-      </section>
     </div>
   );
 }
