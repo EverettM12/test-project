@@ -45,6 +45,8 @@ type WorkspaceViewProps = {
   onOrganizationUpdated: (organization: Organization) => void;
   onOrganizationDeleted: () => void;
   initialSection?: Section;
+  accentColor?: string;
+  onAccentColorChange?: (color: string) => void;
 };
 
 function formatDate(value: string): string {
@@ -71,6 +73,8 @@ function WorkspaceView({
   onOrganizationUpdated,
   onOrganizationDeleted,
   initialSection = 'overview',
+  accentColor = '#3ecf8e',
+  onAccentColorChange,
 }: WorkspaceViewProps) {
   const [section, setSection] = useState<Section>(initialSection);
 
@@ -742,6 +746,38 @@ function WorkspaceView({
                 {working ? 'Saving...' : 'Save organization'}
               </button>
             )}
+          </section>
+
+          <section className="workspace-card">
+            <div className="workspace-card-heading">
+              <div>
+                <span className="dock-kicker">APPEARANCE</span>
+                <h2>Accent color</h2>
+                <p>Choose the accent used throughout the site. Your choice is saved for the next load.</p>
+              </div>
+            </div>
+
+            <div className="workspace-accent-picker">
+              <label className="workspace-accent-swatch">
+                <span>Color</span>
+                <input
+                  type="color"
+                  value={accentColor}
+                  disabled={!canManageOrganization || !onAccentColorChange}
+                  onChange={(event) => onAccentColorChange?.(event.target.value)}
+                />
+              </label>
+              <label>
+                Hex
+                <input
+                  value={accentColor}
+                  disabled={!canManageOrganization || !onAccentColorChange}
+                  onChange={(event) => onAccentColorChange?.(event.target.value)}
+                  placeholder="#3ecf8e"
+                  maxLength={7}
+                />
+              </label>
+            </div>
           </section>
 
           <section className="workspace-card">
