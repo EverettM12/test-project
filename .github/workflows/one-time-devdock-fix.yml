@@ -1,0 +1,73 @@
+name: one-time-devdock-fix
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor == 'github-actions[bot]' || github.event.head_commit.message == 'trigger DevDock project-state fix'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply project state fix
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("src/DevDock.tsx")
+          content = path.read_text()
+
+          replacements = [
+              (
+                  "async function loadGithubOverview() {\n"
+                  "    if (!project?.id) {",
+                  "async function loadGithubOverview(targetProject: Project | null = project) {\n"
+                  "    if (!targetProject?.id) {",
+              ),
+              (
+                  "body: { project_id: project.id },",
+                  "body: { project_id: targetProject.id },",
+              ),
+              (
+                  "      void loadGithubOverview();\n"
+                  "    }\n\n"
+                  "    const savedWikiId",
+                  "      void loadGithubOverview(nextProject);\n"
+                  "    }\n\n"
+                  "    const savedWikiId",
+              ),
+              (
+                  "      void loadGithubOverview();\n"
+                  "      setMessage('GitHub repository connected.');",
+                  "      void loadGithubOverview(updatedProject);\n"
+                  "      setMessage('GitHub repository connected.');",
+              ),
+          ]
+
+          for old, new in replacements:
+              if old not in content:
+                  raise SystemExit(f"Expected source pattern not found: {old!r}")
+              content = content.replace(old, new, 1)
+
+          path.write_text(content)
+          PY
+
+      - name: Remove one-time workflow
+        run: rm .github/workflows/one-time-devdock-fix.yml
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/DevDock.tsx .github/workflows/one-time-devdock-fix.yml
+          git diff --cached --quiet && exit 0
+          git commit -m "fix DevDock GitHub project state race"
+          git push
