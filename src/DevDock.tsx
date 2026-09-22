@@ -538,7 +538,7 @@ function DevDock() {
     setGithubOverviewError('');
 
     if (nextProject.github_repo) {
-      void loadGithubOverview();
+      void loadGithubOverview(nextProject);
     }
 
     const savedWikiId = localStorage.getItem(`test-project:wiki:selected:${nextProject.id}`);
@@ -948,8 +948,8 @@ function DevDock() {
     }
   }
 
-  async function loadGithubOverview() {
-    if (!project?.id) {
+  async function loadGithubOverview(targetProject: Project | null = project) {
+    if (!targetProject?.id) {
       setGithubOverview(null);
       setGithubOverviewError('No project is selected.');
       return;
@@ -960,7 +960,7 @@ function DevDock() {
       setGithubOverviewError('');
 
       const { data, error: functionError } = await supabase.functions.invoke('github-private-overview', {
-        body: { project_id: project.id },
+        body: { project_id: targetProject.id },
       });
 
       if (functionError) {
@@ -1013,7 +1013,7 @@ function DevDock() {
       setProjects((current) => current.map((item) => item.id === project.id ? updatedProject : item));
       setGithubRepo(repo);
       setGithubBranch(branch);
-      void loadGithubOverview();
+      void loadGithubOverview(updatedProject);
       setMessage('GitHub repository connected.');
       await addTimeline('github', `GitHub connected: ${repo}`, `Default branch: ${branch}`);
     } catch (githubError) {
