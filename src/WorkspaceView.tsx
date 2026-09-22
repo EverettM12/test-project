@@ -921,7 +921,7 @@ function WorkspaceView({
             </div>
           </section>
 
-          <section className="workspace-card">
+          <section className="workspace-card workspace-card-wide">
             <span className="dock-kicker">INVITE</span>
             <h3>Invite someone</h3>
             <p>Add a person to this organization by email. The invitation can be accepted when they sign in.</p>
