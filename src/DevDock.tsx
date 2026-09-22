@@ -1625,7 +1625,7 @@ function Dashboard({
         <div>
           <span className="dock-kicker">ACTIVE PROJECT</span>
           <h2>{project?.name ?? 'No project'}</h2>
-          <p>{project?.description}</p>
+          {project?.description && <p>{project.description}</p>}
         </div>
       </section>
 
