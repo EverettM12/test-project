@@ -997,8 +997,7 @@
   .quick-dock { grid-column: auto; }
 
   .inline-create,
-  .github-form,  .build-upload,
-  .create-organization {
+  .github-form,  .build-upload,  .create-organization {
     grid-template-columns: 1fr;
     display: grid;
   }
@@ -1998,7 +1997,6 @@
   border-radius: 6px;
   background: #eeece6;  font: 0.88em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
-
 .markdown-code-block {
   margin: 1.1em 0;
   padding: 16px;
@@ -2997,8 +2995,7 @@ body {
   color: #7f817a;
 }
 .sidebar-icon-svg {
-  width: 17px;
-  height: 17px;
+  width: 17px;  height: 17px;
   display: block;
 }
 
@@ -3998,7 +3995,6 @@ body {
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
 }
-
 .organization-project-meta {
   display: flex;
   align-items: center;
@@ -4304,4 +4300,37 @@ body {
   left: 50%;
   margin: 0;
   transform: translate(-50%, -50%);
+}
+
+.sidebar-settings-button {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  flex: 0 0 38px;
+  display: grid;
+  place-items: center;
+  margin-top: 6px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #6c6d67;
+  cursor: pointer;
+}
+
+.sidebar-settings-button:hover {
+  background: #efefec;
+  color: #1f201d;
+}
+
+.devdock-sidebar.open .sidebar-settings-button {
+  margin-left: 2px;
+}
+
+@media (max-width: 760px) {
+  .sidebar-settings-button {
+    width: 38px;
+    height: 38px;
+  }
 }
