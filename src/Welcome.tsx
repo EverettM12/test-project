@@ -1,101 +1,107 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from 'react';
 import { supabase } from './utils/supabase.ts';
 import './styling/Welcome.css';
+import './styling/Workspace.css';
+
+type View = 'dashboard' | 'wiki' | 'bugs' | 'builds' | 'github' | 'timeline';
+type Organization = { id: string; name: string; slug: string; created_by: string };
+type Project = { id: string; name: string; slug: string; description: string; github_repo: string | null; github_branch: string };
+type Bug = { id: string; title: string; status: string; priority: string; created_at: string };
+type Build = { id: string; version: string; branch: string; original_filename: string | null; file_size: number | null; created_at: string; storage_path: string | null };
+type WikiPage = { id: string; title: string; slug: string; content: string; updated_at: string };
+type TimelineEvent = { id: string; event_type: string; title: string; description: string; created_at: string };
+type LoginProvider = 'email' | 'github' | 'google' | 'discord';
+const LAST_LOGIN_PROVIDER_KEY = 'test-project:last-login-provider';
+const ORG_KEY = 'test-project:selected-organization';
+const PROJECT_KEY = 'test-project:selected-project';
+
+function getProviderLabel(provider: LoginProvider | undefined): string { if (provider === 'github') return 'GitHub'; if (provider === 'google') return 'Google'; if (provider === 'discord') return 'Discord'; return 'Email'; }
+function formatDate(value: string): string { return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); }
+function formatSize(bytes: number | null): string { if (!bytes) return '—'; if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`; return `${(bytes / (1024 * 1024)).toFixed(1)} MB`; }
 
 function Welcome() {
   const [email, setEmail] = useState('');
   const [provider, setProvider] = useState('Email');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [organization, setOrganization] = useState<Organization | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [project, setProject] = useState<Project | null>(null);
+  const [view, setView] = useState<View>('dashboard');
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [bugs, setBugs] = useState<Bug[]>([]);
+  const [builds, setBuilds] = useState<Build[]>([]);
+  const [wikiPages, setWikiPages] = useState<WikiPage[]>([]);
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [newOrg, setNewOrg] = useState('');
+  const [newBug, setNewBug] = useState('');
+  const [newWiki, setNewWiki] = useState('');
+  const [buildVersion, setBuildVersion] = useState('0.1.0');
+  const [buildBranch, setBuildBranch] = useState('main');
+  const [buildFile, setBuildFile] = useState<File | null>(null);
+  const [githubRepo, setGithubRepo] = useState('');
+  const [githubBranch, setGithubBranch] = useState('main');
+  const navItems: Array<{ id: View; label: string; icon: string }> = useMemo(() => [{ id: 'dashboard', label: 'Dashboard', icon: '⌂' }, { id: 'wiki', label: 'Wiki', icon: 'W' }, { id: 'bugs', label: 'Bug Tracker', icon: '!' }, { id: 'builds', label: 'Builds', icon: '↥' }, { id: 'github', label: 'GitHub', icon: '◉' }, { id: 'timeline', label: 'Timeline', icon: '↯' }], []);
 
-  useEffect(() => {
-    async function loadUser() {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+  useEffect(() => { async function loadUser() { const { data: { user } } = await supabase.auth.getUser(); if (!user) return; setEmail(user.email ?? ''); const rememberedProvider = sessionStorage.getItem(LAST_LOGIN_PROVIDER_KEY) as LoginProvider | null; setProvider(getProviderLabel(rememberedProvider ?? user.app_metadata?.provider as LoginProvider | undefined)); await loadOrganizations(user.id); setLoading(false); } loadUser(); }, []);
 
-      if (!user) {
-        return;
-      }
-
-      setEmail(user.email ?? '');
-
-      const identities = user.identities ?? [];
-      const githubIdentity = identities.find((identity) => identity.provider === 'github');
-      const googleIdentity = identities.find((identity) => identity.provider === 'google');
-      const discordIdentity = identities.find((identity) => identity.provider === 'discord');
-
-      if (githubIdentity) {
-        setProvider('GitHub');
-      }
-      if (googleIdentity) {
-        setProvider('Google');
-      }
-      if (discordIdentity) {
-        setProvider('Discord');
-      }
-    }
-
-    loadUser();
-  }, []);
-
-  function toggleMenu() {
-    setMenuOpen((open) => !open);
+  async function loadOrganizations(userId: string) {
+    const { data: created } = await supabase.from('organizations').select('id,name,slug,created_by').eq('created_by', userId).order('created_at');
+    const { data: memberships } = await supabase.from('organization_members').select('organization_id').eq('user_id', userId);
+    const ids = (memberships ?? []).map((item: { organization_id: string }) => item.organization_id);
+    let joined: Organization[] = [];
+    if (ids.length > 0) { const { data } = await supabase.from('organizations').select('id,name,slug,created_by').in('id', ids).order('created_at'); joined = (data ?? []) as Organization[]; }
+    const merged = [...(created ?? []) as Organization[], ...joined].filter((item, index, array) => array.findIndex((other) => other.id === item.id) === index);
+    setOrganizations(merged);
+    const saved = localStorage.getItem(ORG_KEY); const selected = merged.find((item) => item.id === saved) ?? merged[0] ?? null;
+    if (selected) await enterOrganization(selected);
   }
 
-  async function signOut() {
-    await supabase.auth.signOut();
+  async function createOrganization() {
+    const name = newOrg.trim(); if (!name) return; setError(''); const { data: { user } } = await supabase.auth.getUser(); if (!user) return;
+    const slug = `${name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${crypto.randomUUID().slice(0, 6)}`;
+    const { data, error: createError } = await supabase.from('organizations').insert({ name, slug, created_by: user.id }).select('id,name,slug,created_by').single();
+    if (createError || !data) { setError(createError?.message ?? 'Could not create organization.'); return; }
+    await supabase.from('organization_members').insert({ organization_id: data.id, user_id: user.id, role: 'owner' }); setOrganizations((current) => [...current, data as Organization]); setNewOrg(''); await enterOrganization(data as Organization);
   }
 
-  return (
-    <div className="welcome-page">
-      <header className="top-bar">
-        <button
-          type="button"
-          className={`site-button menu-button${menuOpen ? ' is-open' : ''}`}
-          onClick={toggleMenu}
-          aria-label="Open menu"
-          aria-expanded={menuOpen}
-        >
-          <span />
-          <span />
-          <span />
-        </button>
-      </header>
+  async function enterOrganization(next: Organization) {
+    localStorage.setItem(ORG_KEY, next.id); setOrganization(next);
+    const { data } = await supabase.from('projects').select('id,name,slug,description,github_repo,github_branch').eq('organization_id', next.id).order('created_at'); let nextProjects = (data ?? []) as Project[];
+    if (nextProjects.length === 0) { const { data: createdProject } = await supabase.from('projects').insert({ organization_id: next.id, name: 'CurrentGame', slug: 'currentgame', description: 'Your first DevDock project. Replace this with any game or software project.' }).select('id,name,slug,description,github_repo,github_branch').single(); if (createdProject) nextProjects = [createdProject as Project]; }
+    setProjects(nextProjects); const savedProject = localStorage.getItem(PROJECT_KEY); const selectedProject = nextProjects.find((item) => item.id === savedProject) ?? nextProjects[0] ?? null; setProject(selectedProject); if (selectedProject) localStorage.setItem(PROJECT_KEY, selectedProject.id); if (selectedProject) await loadProjectData(selectedProject);
+  }
 
-      <aside className={`side-menu${menuOpen ? ' is-open' : ''}`} aria-hidden={!menuOpen}>
-        <div className="side-menu-content">
-          <div className="account-summary">
-            <span className="account-label">Signed in with</span>
-            <strong>{provider}</strong>
-            <span className="account-email">{email || 'No email available'}</span>
-          </div>
+  async function loadProjectData(nextProject: Project) {
+    const [bugsResult, buildsResult, wikiResult, timelineResult] = await Promise.all([supabase.from('bugs').select('id,title,status,priority,created_at').eq('project_id', nextProject.id).order('created_at', { ascending: false }), supabase.from('builds').select('id,version,branch,original_filename,file_size,created_at,storage_path').eq('project_id', nextProject.id).order('created_at', { ascending: false }), supabase.from('wiki_pages').select('id,title,slug,content,updated_at').eq('project_id', nextProject.id).order('updated_at', { ascending: false }), supabase.from('timeline_events').select('id,event_type,title,description,created_at').eq('project_id', nextProject.id).order('created_at', { ascending: false }).limit(20)]);
+    setBugs((bugsResult.data ?? []) as Bug[]); setBuilds((buildsResult.data ?? []) as Build[]); setWikiPages((wikiResult.data ?? []) as WikiPage[]); setTimeline((timelineResult.data ?? []) as TimelineEvent[]); setGithubRepo(nextProject.github_repo ?? ''); setGithubBranch(nextProject.github_branch ?? 'main');
+  }
 
-          <button type="button" className="site-button side-menu-action" onClick={signOut}>
-            Sign Out
-          </button>
-        </div>
-      </aside>
+  async function selectProject(nextProject: Project) { setProject(nextProject); localStorage.setItem(PROJECT_KEY, nextProject.id); await loadProjectData(nextProject); }
+  async function addBug() { if (!project || !newBug.trim()) return; const { data: { user } } = await supabase.auth.getUser(); if (!user) return; const title = newBug.trim(); const { data, error: insertError } = await supabase.from('bugs').insert({ project_id: project.id, title, created_by: user.id }).select('id,title,status,priority,created_at').single(); if (insertError) { setError(insertError.message); return; } if (data) setBugs((current) => [data as Bug, ...current]); await addTimeline('bug', `Bug created: ${title}`); setNewBug(''); }
+  async function addWikiPage() { if (!project || !newWiki.trim()) return; const { data: { user } } = await supabase.auth.getUser(); if (!user) return; const title = newWiki.trim(); const slug = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}-${crypto.randomUUID().slice(0, 5)}`; const { data, error: insertError } = await supabase.from('wiki_pages').insert({ project_id: project.id, title, slug, content: '# ' + title + '\n\nStart documenting this part of the project.', created_by: user.id }).select('id,title,slug,content,updated_at').single(); if (insertError) { setError(insertError.message); return; } if (data) setWikiPages((current) => [data as WikiPage, ...current]); await addTimeline('wiki', `Wiki page created: ${title}`); setNewWiki(''); }
+  async function addTimeline(type: string, title: string) { if (!project) return; const { data: { user } } = await supabase.auth.getUser(); const { data } = await supabase.from('timeline_events').insert({ project_id: project.id, event_type: type, title, actor_id: user?.id }).select('id,event_type,title,description,created_at').single(); if (data) setTimeline((current) => [data as TimelineEvent, ...current]); }
+  function handleBuildFile(event: ChangeEvent<HTMLInputElement>) { setBuildFile(event.target.files?.[0] ?? null); }
+  async function uploadBuild() { if (!project || !buildFile) return; const { data: { user } } = await supabase.auth.getUser(); if (!user) return; setMessage('Uploading build...'); setError(''); const path = `${project.id}/${crypto.randomUUID()}-${buildFile.name}`; const { error: uploadError } = await supabase.storage.from('builds').upload(path, buildFile); if (uploadError) { setError(uploadError.message); setMessage(''); return; } const { data, error: insertError } = await supabase.from('builds').insert({ project_id: project.id, version: buildVersion, branch: buildBranch, original_filename: buildFile.name, file_size: buildFile.size, storage_path: path, created_by: user.id }).select('id,version,branch,original_filename,file_size,created_at,storage_path').single(); if (insertError) { setError(insertError.message); setMessage(''); return; } if (data) setBuilds((current) => [data as Build, ...current]); await addTimeline('build', `Build ${buildVersion} uploaded`); setBuildFile(null); setMessage('Build uploaded.'); }
+  async function downloadBuild(build: Build) { if (!build.storage_path) return; const { data, error: downloadError } = await supabase.storage.from('builds').createSignedUrl(build.storage_path, 300); if (downloadError || !data?.signedUrl) { setError(downloadError?.message ?? 'Could not create build link.'); return; } window.open(data.signedUrl, '_blank', 'noopener,noreferrer'); }
+  async function saveGithub() { if (!project || !githubRepo.trim()) return; const { data: { user } } = await supabase.auth.getUser(); if (!user) return; const repo = githubRepo.trim().replace(/^https:\/\/github\.com\//, '').replace(/\/$/, ''); const branch = githubBranch.trim() || 'main'; const { error: updateError } = await supabase.from('projects').update({ github_repo: repo, github_branch: branch }).eq('id', project.id); if (updateError) { setError(updateError.message); return; } await supabase.from('github_connections').upsert({ project_id: project.id, repo, branch, connected_by: user.id }); const updated = { ...project, github_repo: repo, github_branch: branch }; setProject(updated); setProjects((current) => current.map((item) => item.id === project.id ? updated : item)); await addTimeline('github', `GitHub connected: ${repo}`); setMessage('GitHub repository saved.'); }
+  async function signOut() { sessionStorage.removeItem(LAST_LOGIN_PROVIDER_KEY); await supabase.auth.signOut(); }
+  function changeView(next: View) { setView(next); setMenuOpen(false); setError(''); setMessage(''); }
 
-      <main className="welcome-content">
-        <section className="welcome-card" aria-label="Account information">
-          <h1>Welcome in</h1>
-          <p className="welcome-detail">
-            Signed in with <strong>{provider}</strong>
-          </p>
-          <p className="welcome-email">{email || 'Loading email...'}</p>
-        </section>
-      </main>
+  if (loading) return <div className="workspace-loading">Loading DevDock...</div>;
+  if (!organization) return <div className="workspace-page organization-page"><div className="organization-card"><div className="eyebrow">DEVDock</div><h1>Choose your organization</h1><p>Organizations keep projects, people, builds, bugs, and documentation separated. Enter one before you start working.</p>{organizations.length > 0 && <div className="organization-list">{organizations.map((item) => <button key={item.id} className="organization-option" onClick={() => enterOrganization(item)}><strong>{item.name}</strong><span>{item.slug}</span></button>)}</div>}<div className="create-organization"><input value={newOrg} onChange={(event) => setNewOrg(event.target.value)} placeholder="New organization name" /><button className="primary-button" onClick={createOrganization}>Create organization</button></div>{error && <p className="error-text">{error}</p>}</div></div>;
 
-      {menuOpen && (
-        <button
-          type="button"
-          className="menu-backdrop"
-          aria-label="Close menu"
-          onClick={toggleMenu}
-        />
-      )}
-    </div>
-  );
+  return <div className="workspace-page"><header className="workspace-topbar"><button type="button" className={`menu-button${menuOpen ? ' is-open' : ''}`} onClick={() => setMenuOpen((open) => !open)} aria-label="Open navigation"><span /><span /><span /></button><div className="brand">DevDock</div><div className="workspace-switcher"><span>{organization.name}</span><span className="chevron">⌄</span></div><div className="top-project"><span>{project?.name ?? 'No project'}</span></div></header><aside className={`workspace-sidebar${menuOpen ? ' is-open' : ''}`}><div className="sidebar-heading">{organization.name}</div><div className="sidebar-label">WORKSPACE</div>{navItems.map((item) => <button key={item.id} className={`nav-item${view === item.id ? ' active' : ''}`} onClick={() => changeView(item.id)}><span className="nav-icon">{item.icon}</span>{item.label}</button>)}<div className="sidebar-label projects-label">PROJECTS</div><div className="project-list">{projects.map((item) => <button key={item.id} className={`project-item${project?.id === item.id ? ' active' : ''}`} onClick={() => selectProject(item)}>{item.name}</button>)}</div><div className="sidebar-spacer" /><div className="account-mini"><strong>Everett</strong><span>{email || 'Signed in'}</span></div><button className="signout-button" onClick={signOut}>Sign Out</button></aside>{menuOpen && <button className="sidebar-backdrop" aria-label="Close navigation" onClick={() => setMenuOpen(false)} />}<main className="workspace-main"><div className="workspace-header"><div><div className="eyebrow">{organization.name}</div><h1>{view === 'dashboard' ? 'Welcome, Everett.' : navItems.find((item) => item.id === view)?.label}</h1><p>{project?.name ?? 'Create a project to get started.'}</p></div>{projects.length > 1 && <select value={project?.id ?? ''} onChange={(event) => { const selected = projects.find((item) => item.id === event.target.value); if (selected) selectProject(selected); }}><option value="">Select project</option>{projects.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select>}</div>{message && <div className="notice">{message}</div>}{error && <div className="error-banner">{error}</div>}{view === 'dashboard' && <Dashboard project={project} bugs={bugs} builds={builds} wikiPages={wikiPages} timeline={timeline} onView={changeView} />}{view === 'wiki' && <WikiView pages={wikiPages} value={newWiki} onChange={setNewWiki} onCreate={addWikiPage} />}{view === 'bugs' && <BugsView bugs={bugs} value={newBug} onChange={setNewBug} onCreate={addBug} />}{view === 'builds' && <BuildsView builds={builds} version={buildVersion} branch={buildBranch} file={buildFile} onVersion={setBuildVersion} onBranch={setBuildBranch} onFile={handleBuildFile} onUpload={uploadBuild} onDownload={downloadBuild} />}{view === 'github' && <GithubView repo={githubRepo} branch={githubBranch} onRepo={setGithubRepo} onBranch={setGithubBranch} onSave={saveGithub} project={project} />}{view === 'timeline' && <TimelineView events={timeline} />}</main></div>;
 }
 
+function Dashboard({ project, bugs, builds, wikiPages, timeline, onView }: { project: Project | null; bugs: Bug[]; builds: Build[]; wikiPages: WikiPage[]; timeline: TimelineEvent[]; onView: (view: View) => void }) { const openBugs = bugs.filter((bug) => bug.status !== 'closed' && bug.status !== 'resolved').length; return <div className="dashboard-grid"><section className="hero-dock dock-wide"><div><span className="dock-kicker">ACTIVE PROJECT</span><h2>{project?.name ?? 'No project yet'}</h2><p>{project?.description || 'Your development workspace is ready.'}</p></div><button className="primary-button" onClick={() => onView('timeline')}>View activity</button></section><Dock title="Wiki" icon="W" value={String(wikiPages.length)} detail="pages" onClick={() => onView('wiki')}><div className="dock-list">{wikiPages.slice(0, 3).map((page) => <span key={page.id}>{page.title}</span>)}{wikiPages.length === 0 && <span className="muted">No pages yet</span>}</div></Dock><Dock title="Bug Tracker" icon="!" value={String(openBugs)} detail="open bugs" onClick={() => onView('bugs')}><div className="metric-row"><span>Critical / High</span><strong>{bugs.filter((bug) => bug.priority === 'critical' || bug.priority === 'high').length}</strong></div></Dock><Dock title="Builds" icon="↥" value={String(builds.length)} detail="uploaded" onClick={() => onView('builds')}><div className="dock-list">{builds.slice(0, 2).map((build) => <span key={build.id}>v{build.version} · {build.branch}</span>)}{builds.length === 0 && <span className="muted">No builds yet</span>}</div></Dock><Dock title="GitHub" icon="◉" value={project?.github_repo ? 'Connected' : 'Not connected'} detail="repository" onClick={() => onView('github')}><div className="github-mini">{project?.github_repo ? project.github_repo : 'Connect a repository'}</div></Dock><Dock title="Timeline" icon="↯" value={String(timeline.length)} detail="recent events" onClick={() => onView('timeline')}><div className="timeline-mini">{timeline.slice(0, 3).map((event) => <div key={event.id}><strong>{event.title}</strong><span>{formatDate(event.created_at)}</span></div>)}{timeline.length === 0 && <span className="muted">Activity will appear here</span>}</div></Dock><section className="dock dock-wide quick-dock"><div><span className="dock-kicker">WORKFLOW</span><h3>Your workspace skeleton is live.</h3><p>Wiki, bugs, builds, GitHub, and timeline data are backed by Supabase and scoped to the organization.</p></div><div className="quick-actions"><button onClick={() => onView('bugs')}>Report bug</button><button onClick={() => onView('builds')}>Upload build</button><button onClick={() => onView('wiki')}>Write docs</button></div></section></div>; }
+function Dock({ title, icon, value, detail, onClick, children }: { title: string; icon: string; value: string; detail: string; onClick: () => void; children: ReactNode }) { return <button className="dock dock-button" onClick={onClick}><div className="dock-title"><span className="dock-icon">{icon}</span><span>{title}</span><span className="dock-arrow">→</span></div><div className="dock-stat"><strong>{value}</strong><span>{detail}</span></div>{children}</button>; }
+function WikiView({ pages, value, onChange, onCreate }: { pages: WikiPage[]; value: string; onChange: (value: string) => void; onCreate: () => void }) { return <section className="content-card"><div className="section-head"><div><span className="dock-kicker">DOCUMENTATION</span><h2>Project Wiki</h2><p>A place for architecture, systems, design notes, and project knowledge.</p></div><div className="inline-create"><input value={value} onChange={(event) => onChange(event.target.value)} placeholder="New wiki page" /><button className="primary-button" onClick={onCreate}>Create</button></div></div><div className="resource-list">{pages.map((page) => <article className="resource-row" key={page.id}><div><strong>{page.title}</strong><p>{page.content.split('\n').slice(1, 2).join(' ') || 'Documentation page'}</p></div><span>Updated {formatDate(page.updated_at)}</span></article>)}{pages.length === 0 && <EmptyState title="No wiki pages yet" detail="Create your first page to start building the project's internal knowledge base." />}</div></section>; }
+function BugsView({ bugs, value, onChange, onCreate }: { bugs: Bug[]; value: string; onChange: (value: string) => void; onCreate: () => void }) { return <section className="content-card"><div className="section-head"><div><span className="dock-kicker">TRACKING</span><h2>Bug Tracker</h2><p>Capture problems with status and priority now; richer issue fields can grow from this skeleton.</p></div><div className="inline-create"><input value={value} onChange={(event) => onChange(event.target.value)} placeholder="Describe the bug" onKeyDown={(event) => { if (event.key === 'Enter') onCreate(); }} /><button className="primary-button" onClick={onCreate}>Report</button></div></div><div className="bug-table"><div className="table-head"><span>Issue</span><span>Status</span><span>Priority</span><span>Created</span></div>{bugs.map((bug) => <div className="table-row" key={bug.id}><strong>{bug.title}</strong><span className={`status ${bug.status}`}>{bug.status.replace('_', ' ')}</span><span className={`priority ${bug.priority}`}>{bug.priority}</span><span>{formatDate(bug.created_at)}</span></div>)}{bugs.length === 0 && <EmptyState title="No bugs reported" detail="Your first issue will appear here." />}</div></section>; }
+function BuildsView({ builds, version, branch, file, onVersion, onBranch, onFile, onUpload, onDownload }: { builds: Build[]; version: string; branch: string; file: File | null; onVersion: (value: string) => void; onBranch: (value: string) => void; onFile: (event: ChangeEvent<HTMLInputElement>) => void; onUpload: () => void; onDownload: (build: Build) => void }) { return <section className="content-card"><div className="section-head"><div><span className="dock-kicker">ARTIFACTS</span><h2>Builds</h2><p>Upload Windows executables and keep each build attached to a version and branch.</p></div></div><div className="build-upload"><input value={version} onChange={(event) => onVersion(event.target.value)} placeholder="Version" /><input value={branch} onChange={(event) => onBranch(event.target.value)} placeholder="Branch" /><label className="file-picker"><input type="file" accept=".exe,.zip,.7z" onChange={onFile} />{file ? file.name : 'Choose build file'}</label><button className="primary-button" disabled={!file} onClick={onUpload}>Upload Build</button></div><div className="resource-list">{builds.map((build) => <article className="resource-row build-row" key={build.id}><div><strong>v{build.version}</strong><p>{build.original_filename ?? 'Build artifact'} · {formatSize(build.file_size)} · {build.branch}</p></div><button onClick={() => onDownload(build)}>Download</button><span>{formatDate(build.created_at)}</span></article>)}{builds.length === 0 && <EmptyState title="No builds uploaded" detail="Drop an .exe or archive here when you have a build ready for testing." />}</div></section>; }
+function GithubView({ repo, branch, onRepo, onBranch, onSave, project }: { repo: string; branch: string; onRepo: (value: string) => void; onBranch: (value: string) => void; onSave: () => void; project: Project | null }) { return <section className="content-card"><div className="section-head"><div><span className="dock-kicker">SOURCE CONTROL</span><h2>GitHub Integration</h2><p>Connect the repository that belongs to this project. This first skeleton stores the connection so the dashboard can grow into live commits, branches, PRs, and issues.</p></div></div><div className="github-form"><label>Repository<input value={repo} onChange={(event) => onRepo(event.target.value)} placeholder="EverettM12/currentgame" /></label><label>Default branch<input value={branch} onChange={(event) => onBranch(event.target.value)} placeholder="main" /></label><button className="primary-button" onClick={onSave}>Save Connection</button></div>{project?.github_repo && <div className="github-connected"><div><span className="connected-dot" /> Connected</div><strong>{project.github_repo}</strong><span>Branch: {project.github_branch}</span><a href={`https://github.com/${project.github_repo}`} target="_blank" rel="noreferrer">Open on GitHub →</a></div>}<div className="integration-grid"><div><strong>Commits</strong><span>Skeleton ready</span></div><div><strong>Branches</strong><span>Skeleton ready</span></div><div><strong>Pull requests</strong><span>Skeleton ready</span></div><div><strong>Issues</strong><span>Skeleton ready</span></div></div></section>; }
+function TimelineView({ events }: { events: TimelineEvent[] }) { return <section className="content-card"><div className="section-head"><div><span className="dock-kicker">PROJECT HISTORY</span><h2>Timeline</h2><p>A chronological record of important work happening inside the project.</p></div></div><div className="timeline">{events.map((event) => <article className="timeline-event" key={event.id}><div className="timeline-dot" /><div><span>{formatDate(event.created_at)} · {event.event_type}</span><h3>{event.title}</h3>{event.description && <p>{event.description}</p>}</div></article>)}{events.length === 0 && <EmptyState title="Timeline is empty" detail="Project activity will start appearing here as you create bugs, wiki pages, builds, and integrations." />}</div></section>; }
+function EmptyState({ title, detail }: { title: string; detail: string }) { return <div className="empty-state"><strong>{title}</strong><span>{detail}</span></div>; }
 export default Welcome;
