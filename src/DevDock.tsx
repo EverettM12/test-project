@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { supabase } from './utils/supabase.ts';
 import './styling/DevDock.css';
 
@@ -8,7 +8,7 @@ type Organization = { id: string; name: string; slug: string; created_by: string
 type Project = { id: string; name: string; slug: string; description: string; github_repo: string | null; github_branch: string };
 type Bug = { id: string; title: string; status: string; priority: string; created_at: string };
 type Build = { id: string; version: string; branch: string; original_filename: string | null; file_size: number | null; created_at: string; storage_path: string | null };
-type WikiPage = { id: string; title: string; slug: string; content: string; updated_at: string };
+type WikiPage = { id: string; title: string; slug: string; content: string; parent_id: string | null; updated_at: string };
 type TimelineEvent = { id: string; event_type: string; title: string; description: string; created_at: string };
 
 const views: Array<{ id: View; label: string; icon: string }> = [
@@ -46,6 +46,7 @@ function DevDock() {
   const [workspaceLoading, setWorkspaceLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [organizationPickerOpen, setOrganizationPickerOpen] = useState(false);
+  const organizationAreaRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
@@ -71,6 +72,22 @@ function DevDock() {
     () => views.find((item) => item.id === view)?.label ?? 'Dashboard',
     [view],
   );
+
+  useEffect(() => {
+    function handleDocumentPointer(event: MouseEvent) {
+      const target = event.target;
+      if (!(target instanceof Node)) {
+        return;
+      }
+
+      if (organizationPickerOpen && !organizationAreaRef.current?.contains(target)) {
+        setOrganizationPickerOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleDocumentPointer);
+    return () => document.removeEventListener('mousedown', handleDocumentPointer);
+  }, [organizationPickerOpen]);
 
   useEffect(() => {
     async function initialize() {
@@ -233,7 +250,7 @@ function DevDock() {
     const [bugsResult, buildsResult, wikiResult, timelineResult] = await Promise.all([
       supabase.from('bugs').select('id,title,status,priority,created_at').eq('project_id', nextProject.id).order('created_at', { ascending: false }),
       supabase.from('builds').select('id,version,branch,original_filename,file_size,created_at,storage_path').eq('project_id', nextProject.id).order('created_at', { ascending: false }),
-      supabase.from('wiki_pages').select('id,title,slug,content,updated_at').eq('project_id', nextProject.id).order('updated_at', { ascending: false }),
+      supabase.from('wiki_pages').select('id,title,slug,content,parent_id,updated_at').eq('project_id', nextProject.id).order('updated_at', { ascending: false }),
       supabase.from('timeline_events').select('id,event_type,title,description,created_at').eq('project_id', nextProject.id).order('created_at', { ascending: false }).limit(50),
     ]);
 
@@ -321,7 +338,7 @@ function DevDock() {
           content: `# ${title}\n\nStart documenting this part of the project.`,
           created_by: user.id,
         })
-        .select('id,title,slug,content,updated_at')
+        .select('id,title,slug,content,parent_id,updated_at')
         .single();
 
       if (insertError || !data) throw insertError ?? new Error('Could not create wiki page.');
@@ -349,7 +366,7 @@ function DevDock() {
           updated_at: new Date().toISOString(),
         })
         .eq('id', selectedWiki.id)
-        .select('id,title,slug,content,updated_at')
+        .select('id,title,slug,content,parent_id,updated_at')
         .single();
 
       if (updateError || !data) throw updateError ?? new Error('Could not save wiki page.');
@@ -560,15 +577,15 @@ function DevDock() {
 
         <div className="brand-lockup">DevDock</div>
 
+        <div className="organization-area" ref={organizationAreaRef}>
         <button
           type="button"
           className="organization-switcher"
           onClick={() => setOrganizationPickerOpen((current) => !current)}
+          aria-expanded={organizationPickerOpen}
         >
           <span>{organization.name}</span><span>⌄</span>
         </button>
-
-        <div className="active-project-label">{project?.name ?? 'No project'}</div>
 
         {organizationPickerOpen && (
           <div className="organization-popover">
@@ -588,6 +605,9 @@ function DevDock() {
             </button>
           </div>
         )}
+      </div>
+
+        <div className="active-project-label">{project?.name ?? 'No project'}</div>
       </header>
 
       <aside className={`devdock-sidebar${menuOpen ? ' open' : ''}`}>
@@ -801,7 +821,13 @@ function DashboardDock({
 }
 
 function WikiView({
-  pages, selected, value, onChange, onCreate, onSelect, onSave,
+  pages,
+  selected,
+  value,
+  onChange,
+  onCreate,
+  onSelect,
+  onSave,
 }: {
   pages: WikiPage[];
   selected: WikiPage | null;
@@ -812,41 +838,141 @@ function WikiView({
   onSave: () => void;
 }) {
   return (
-    <section className="content-layout">
-      <div className="content-card">
-        <div className="section-head">
+    <section className="wiki-layout">
+      <aside className="wiki-tree-panel">
+        <div className="wiki-tree-header">
           <div>
-            <span className="dock-kicker">DOCUMENTATION</span>
-            <h2>Project Wiki</h2>
-            <p>Architecture, systems, design notes, and everything future-you needs to remember.</p>
+            <span className="dock-kicker">PROJECT WIKI</span>
+            <h2>Documentation</h2>
           </div>
-          <div className="inline-create">
-            <input value={value} onChange={(event) => onChange(event.target.value)} placeholder="New page" onKeyDown={(event) => { if (event.key === 'Enter') onCreate(); }} />
-            <button type="button" className="primary-button" onClick={onCreate}>Create</button>
-          </div>
+          <span className="wiki-count">{pages.length}</span>
         </div>
-        <div className="resource-list">
-          {pages.map((page) => (
-            <button type="button" className={`resource-row resource-row-button${selected?.id === page.id ? ' selected' : ''}`} key={page.id} onClick={() => onSelect(page)}>
-              <div><strong>{page.title}</strong><p>{page.content.split('\n').slice(1, 2).join(' ') || 'Documentation page'}</p></div>
-              <span>Updated {formatDate(page.updated_at)}</span>
-            </button>
-          ))}
-          {pages.length === 0 && <EmptyState title="No wiki pages yet" detail="Create your first page to start building the project's internal knowledge base." />}
-        </div>
-      </div>
 
-      {selected && (
-        <div className="content-card wiki-editor-card">
-          <div className="editor-heading">
-            <span className="dock-kicker">PAGE</span>
-            <input value={selected.title} onChange={(event) => onSelect({ ...selected, title: event.target.value })} />
-            <button type="button" className="primary-button" onClick={onSave}>Save</button>
-          </div>
-          <textarea value={selected.content} onChange={(event) => onSelect({ ...selected, content: event.target.value })} />
+        <div className="wiki-create">
+          <input
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder="New page"
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                onCreate();
+              }
+            }}
+          />
+          <button type="button" className="primary-button" onClick={onCreate}>
+            New
+          </button>
         </div>
-      )}
+
+        <div className="wiki-tree">
+          <WikiTree pages={pages} parentId={null} selectedId={selected?.id ?? null} onSelect={onSelect} />
+          {pages.length === 0 && (
+            <EmptyState
+              title="No pages yet"
+              detail="Create your first page to start the documentation tree."
+            />
+          )}
+        </div>
+      </aside>
+
+      <section className="wiki-content-panel">
+        {selected ? (
+          <>
+            <div className="wiki-page-header">
+              <div>
+                <span className="dock-kicker">PAGE</span>
+                <h2>{selected.title}</h2>
+                <p>Updated {formatDate(selected.updated_at)}</p>
+              </div>
+              <button type="button" className="primary-button" onClick={onSave}>
+                Save
+              </button>
+            </div>
+
+            <div className="wiki-breadcrumb">
+              <span>Wiki</span>
+              <span>›</span>
+              <strong>{selected.title}</strong>
+            </div>
+
+            <div className="wiki-editor">
+              <input
+                value={selected.title}
+                onChange={(event) =>
+                  onSelect({
+                    ...selected,
+                    title: event.target.value,
+                  })
+                }
+              />
+              <textarea
+                value={selected.content}
+                onChange={(event) =>
+                  onSelect({
+                    ...selected,
+                    content: event.target.value,
+                  })
+                }
+              />
+            </div>
+          </>
+        ) : (
+          <div className="wiki-empty-content">
+            <span className="dock-kicker">PROJECT WIKI</span>
+            <h2>Select a page</h2>
+            <p>Choose a document from the tree to start reading or editing it.</p>
+          </div>
+        )}
+      </section>
     </section>
+  );
+}
+
+function WikiTree({
+  pages,
+  parentId,
+  selectedId,
+  onSelect,
+}: {
+  pages: WikiPage[];
+  parentId: string | null;
+  selectedId: string | null;
+  onSelect: (page: WikiPage) => void;
+}) {
+  const children = pages.filter((page) => page.parent_id === parentId);
+
+  return (
+    <div className={parentId === null ? 'wiki-tree-level root' : 'wiki-tree-level'}>
+      {children.map((page) => {
+        const hasChildren = pages.some((child) => child.parent_id === page.id);
+
+        return (
+          <div className="wiki-tree-node" key={page.id}>
+            <button
+              type="button"
+              className={`wiki-tree-item${selectedId === page.id ? ' selected' : ''}`}
+              onClick={() => onSelect(page)}
+            >
+              <span className={`wiki-tree-toggle${hasChildren ? '' : ' empty'}`}>
+                {hasChildren ? '⌄' : '·'}
+              </span>
+              <span className="wiki-tree-icon">□</span>
+              <span>{page.title}</span>
+            </button>
+            {hasChildren && (
+              <div className="wiki-tree-children">
+                <WikiTree
+                  pages={pages}
+                  parentId={page.id}
+                  selectedId={selectedId}
+                  onSelect={onSelect}
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
