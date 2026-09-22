@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type ReactNode } from 'react';
 import { supabase } from './utils/supabase.ts';
 import WikiView from './WikiView.tsx';
 import WorkspaceView from './WorkspaceView.tsx';
@@ -74,6 +74,8 @@ function WikiIcon({ size = 18 }: { size?: number }) {
   );
 }
 
+const ACCENT_STORAGE_KEY = 'test-project:accent-color';
+
 const projectViews: Array<{ id: View; label: string; icon: ReactNode }> = [
   { id: 'dashboard', label: 'Dashboard', icon: '⌂' },
   { id: 'wiki', label: 'Wiki', icon: <WikiIcon /> },
@@ -138,6 +140,24 @@ function DevDock() {
   const [githubRepo, setGithubRepo] = useState('');
   const [githubBranch, setGithubBranch] = useState('main');
   const [newProjectOpen, setNewProjectOpen] = useState(false);
+  const [accentColor, setAccentColor] = useState<string>(() => {
+    if (typeof window === 'undefined') {
+      return '#3ecf8e';
+    }
+
+    return window.localStorage.getItem(ACCENT_STORAGE_KEY) ?? '#3ecf8e';
+  });
+
+  const accentStyle: CSSProperties = { '--accent': accentColor } as CSSProperties;
+
+  function changeAccentColor(nextColor: string) {
+    if (!/^#[0-9a-fA-F]{6}$/.test(nextColor)) {
+      return;
+    }
+
+    setAccentColor(nextColor);
+    window.localStorage.setItem(ACCENT_STORAGE_KEY, nextColor);
+  }
 
   const activeView = useMemo(() => {
     if (view === 'workspace') {
@@ -906,16 +926,16 @@ function DevDock() {
   }
 
   if (loading) {
-    return <div className="devdock-loading">Loading DevDock...</div>;
+    return <div className="devdock-loading" style={accentStyle}>Loading DevDock...</div>;
   }
 
   if (workspaceLoading) {
-    return <div className="devdock-loading">Loading organization...</div>;
+    return <div className="devdock-loading" style={accentStyle}>Loading organization...</div>;
   }
 
   if (!organization) {
     return (
-      <div className="organization-shell">
+      <div className="organization-shell" style={accentStyle}>
         <div className="organization-panel">
           <div className="brand-lockup">DevDock</div>
           <span className="eyebrow">YOUR ORGANIZATIONS</span>
@@ -977,7 +997,7 @@ function DevDock() {
   }
 
   return (
-    <div className="devdock-app">
+    <div className="devdock-app" style={accentStyle}>
       <header className="devdock-topbar">
         <button
           type="button"
@@ -1172,6 +1192,8 @@ function DevDock() {
             onProjectsUpdated={handleProjectsUpdated}
             onOrganizationUpdated={handleOrganizationUpdated}
             onOrganizationDeleted={() => void handleOrganizationDeleted()}
+            accentColor={accentColor}
+            onAccentColorChange={changeAccentColor}
           />
         )}
 
