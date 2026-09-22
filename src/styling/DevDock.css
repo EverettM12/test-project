@@ -997,8 +997,7 @@
   .quick-dock { grid-column: auto; }
 
   .inline-create,
-  .github-form,  .build-upload,  .create-organization {    grid-template-columns: 1fr;
-    display: grid;
+  .github-form,  .build-upload,  .create-organization {    grid-template-columns: 1fr;    display: grid;
   }
 
   .inline-create input { width: auto; }
@@ -1997,8 +1996,7 @@
   background: #eeece6;  font: 0.88em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 .markdown-code-block {  margin: 1.1em 0;
-  padding: 16px;
-  overflow: auto;
+  padding: 16px;  overflow: auto;
   border-radius: 14px;
   background: #1f1f1c;
   color: #f4f3ee;
@@ -2997,8 +2995,7 @@ body {
   display: block;
 }
 .nav-label {
-  min-width: 0;
-  overflow: hidden;
+  min-width: 0;  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   opacity: 1;
@@ -3997,8 +3994,7 @@ body {
   align-items: center;  justify-content: space-between;
   gap: 10px;
   padding-top: 16px;
-  border-top: 1px solid var(--line);
-  color: #7c7d77;
+  border-top: 1px solid var(--line);  color: #7c7d77;
   font-size: 0.68rem;
 }
 
@@ -4379,8 +4375,8 @@ body {
 }
 
 .organization-picker-main {
-  width: min(1540px, calc(100% - 96px));
-  margin: 0 auto;
+  width: min(1425px, calc(100% - 18vw));
+  margin-left: 9vw;
   padding: 118px 0 72px;
 }
 
