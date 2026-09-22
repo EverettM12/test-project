@@ -135,7 +135,9 @@ function DevDock() {
   const [workspaceLoading, setWorkspaceLoading] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [organizationPickerOpen, setOrganizationPickerOpen] = useState(false);
+  const [projectPickerOpen, setProjectPickerOpen] = useState(false);
   const organizationAreaRef = useRef<HTMLDivElement | null>(null);
+  const projectAreaRef = useRef<HTMLDivElement | null>(null);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [incomingInvitations, setIncomingInvitations] = useState<IncomingInvitation[]>([]);
@@ -199,11 +201,15 @@ function DevDock() {
       if (organizationPickerOpen && !organizationAreaRef.current?.contains(target)) {
         setOrganizationPickerOpen(false);
       }
+
+      if (projectPickerOpen && !projectAreaRef.current?.contains(target)) {
+        setProjectPickerOpen(false);
+      }
     }
 
     document.addEventListener('mousedown', handleDocumentPointer);
     return () => document.removeEventListener('mousedown', handleDocumentPointer);
-  }, [organizationPickerOpen]);
+  }, [organizationPickerOpen, projectPickerOpen]);
 
   useEffect(() => {
     async function initialize() {
@@ -470,6 +476,7 @@ function DevDock() {
 
   async function selectProject(nextProject: Project) {
     try {
+      setProjectPickerOpen(false);
       setError('');
       setWorkspaceLoading(true);
       setProject(nextProject);
@@ -921,6 +928,7 @@ function DevDock() {
     setError('');
     setMessage('');
     setOrganizationPickerOpen(true);
+    setProjectPickerOpen(false);
     setMenuOpen(false);
   }
 
@@ -1148,19 +1156,38 @@ function DevDock() {
         )}
       </div>
 
-        {project && <button
-          type="button"
-          className="active-project-label topbar-project"
-          onClick={() => {
-            if (projects.length > 1) {
-              setView('dashboard');
-            }
-          }}
-        >
-          <span className="topbar-project-cube">◇</span>
-          <span>{project.name}</span>
-          
-        </button>}
+        {project && (
+          <div className="project-area" ref={projectAreaRef}>
+            <button
+              type="button"
+              className="organization-switcher project-switcher"
+              onClick={() => setProjectPickerOpen((current) => !current)}
+              aria-expanded={projectPickerOpen}
+              aria-label="Switch project"
+            >
+              <span className="topbar-project-cube">◇</span>
+              <span>{project.name}</span>
+              <span className="project-switcher-chevron">⌄</span>
+            </button>
+
+            {projectPickerOpen && (
+              <div className="organization-popover project-popover">
+                <div className="popover-heading">Switch project</div>
+                {projects.map((item) => (
+                  <button
+                    type="button"
+                    className="organization-popover-option"
+                    key={item.id}
+                    onClick={() => void selectProject(item)}
+                  >
+                    <span>{item.name}</span>
+                    {item.id === project.id && <span>✓</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {project && <span className="topbar-branch">
           <span className="topbar-branch-icon">⑂</span>
@@ -1178,7 +1205,7 @@ function DevDock() {
       </header>
 
       <aside className={`devdock-sidebar${menuOpen ? ' open' : ''}`}>
-        <div className="sidebar-heading">{organization.name}</div>
+        <div className="sidebar-label projects-label">PROJECTS</div>
 
         {(project ? projectViews : organizationViews).map((item) => (
           <button
@@ -1197,8 +1224,6 @@ function DevDock() {
         ))}
 
         {project && <>
-          <div className="sidebar-label projects-label">PROJECTS</div>
-
           <div className="project-list">
           {projects.map((item) => (
             <button
@@ -1218,9 +1243,7 @@ function DevDock() {
         {project && (
           <button
             type="button"
-            className="sidebar-settings-button"
-            aria-label="Organization settings"
-            title="Organization settings"
+            className={`nav-item${view === 'workspace' ? ' active' : ''}`}
             onClick={() => {
               setView('workspace');
               setMenuOpen(false);
@@ -1228,7 +1251,8 @@ function DevDock() {
               setMessage('');
             }}
           >
-            <SettingsIcon size={16} />
+            <span className="nav-icon"><SettingsIcon size={16} /></span>
+            <span className="nav-label">Settings</span>
           </button>
         )}
 
@@ -1252,17 +1276,6 @@ function DevDock() {
               <p>{project?.name ?? 'Select a project to begin working inside the organization.'}</p>
             </div>
 
-            {project && projects.length > 1 && (
-              <select
-                value={project.id}
-                onChange={(event) => {
-                  const nextProject = projects.find((item) => item.id === event.target.value);
-                  if (nextProject) void selectProject(nextProject);
-                }}
-              >
-                {projects.map((item) => <option value={item.id} key={item.id}>{item.name}</option>)}
-              </select>
-            )}
           </div>
         )}
 
@@ -1375,6 +1388,29 @@ function DevDock() {
   );
 }
 
+function Grid3x3Icon({ size = 14 }: { size?: number }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect width="18" height="18" x="3" y="3" rx="2" />
+      <path d="M3 9h18" />
+      <path d="M3 15h18" />
+      <path d="M9 3v18" />
+      <path d="M15 3v18" />
+    </svg>
+  );
+}
+
 function OrganizationHome({
   organization,
   projects,
@@ -1420,7 +1456,7 @@ function OrganizationHome({
             <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search for a project" />
           </label>
           <button type="button" className="organization-filter-button" disabled>All projects <span>·</span></button>
-          <button type="button" className={layout === 'grid' ? 'organization-view-button active' : 'organization-view-button'} onClick={() => setLayout('grid')} aria-label="Grid view">▦</button>
+          <button type="button" className={layout === 'grid' ? 'organization-view-button active' : 'organization-view-button'} onClick={() => setLayout('grid')} aria-label="Grid view"><Grid3x3Icon /></button>
           <button type="button" className={layout === 'list' ? 'organization-view-button active' : 'organization-view-button'} onClick={() => setLayout('list')} aria-label="List view">≡</button>
         </div>
 
@@ -1465,7 +1501,8 @@ function OrganizationHome({
         <div>
           <span className="eyebrow">ORGANIZATION</span>
           <h2>{organization.name}</h2>
-          <p>Select a project to enter its development area. Projects keep their Wiki, Bug Tracker, Builds, GitHub, and Timeline data separate.</p>
+
+
         </div>
 
         <div className="organization-usage-section">
@@ -1588,7 +1625,10 @@ function Dashboard({
         <div>
           <span className="dock-kicker">ACTIVE PROJECT</span>
           <h2>{project?.name ?? 'No project'}</h2>
-          <p>{project?.description || 'This project is ready for development.'}</p>
+          <p className="dashboard-project-status">
+            <span className="dashboard-status-dot" aria-hidden="true" />
+            {project?.description || 'This project is ready for development.'}
+          </p>
         </div>
       </section>
 
