@@ -171,17 +171,25 @@ function DevDock() {
       }
 
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        await loadOrganizations(user.id);
-        await loadIncomingInvitations(user.email ?? '');
+
+      if (!user) {
+        throw new Error('You are no longer signed in.');
       }
 
-      const joined = organizations.find((item) => item.id === invitation.organization_id);
+      await loadOrganizations(user.id);
+      await loadIncomingInvitations(user.email ?? '');
 
-      if (joined) {
-        await enterOrganization(joined);
+      const { data: joined, error: joinedError } = await supabase
+        .from('organizations')
+        .select('id,name,slug,created_by')
+        .eq('id', invitation.organization_id)
+        .single();
+
+      if (joinedError || !joined) {
+        throw joinedError ?? new Error('The organization could not be loaded.');
       }
 
+      await enterOrganization(joined as Organization);
       setMessage(`Joined ${invitation.organization_name}.`);
     } catch (invitationError) {
       setError(
@@ -281,28 +289,7 @@ function DevDock() {
 
       if (projectError) throw projectError;
 
-      let nextProjects = (data ?? []) as Project[];
-
-      if (nextProjects.length === 0) {
-        const { data: createdProject, error: createProjectError } = await supabase
-          .from('projects')
-          .insert({
-            organization_id: nextOrganization.id,
-            name: 'CurrentGame',
-            slug: 'currentgame',
-            description: 'Godot 4.7 first-person open-world adventure project.',
-            github_repo: 'EverettM12/currentgame',
-            github_branch: 'main',
-          })
-          .select('id,name,slug,description,github_repo,github_branch')
-          .single();
-
-        if (createProjectError || !createdProject) {
-          throw createProjectError ?? new Error('Could not create the first project.');
-        }
-
-        nextProjects = [createdProject as Project];
-      }
+      const nextProjects = (data ?? []) as Project[];
 
       setProjects(nextProjects);
       const nextProject = nextProjects[0] ?? null;
