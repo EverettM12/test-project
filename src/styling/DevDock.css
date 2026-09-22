@@ -4994,6 +4994,7 @@ body {
 .dashboard-nav-button {
   color: var(--ink);
   font-size: 0.8rem;
+}
 
 .organization-usage-card {
   min-width: 0;
