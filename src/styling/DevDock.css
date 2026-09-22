@@ -997,8 +997,7 @@
   .quick-dock { grid-column: auto; }
 
   .inline-create,
-  .github-form,  .build-upload,  .create-organization {    grid-template-columns: 1fr;    display: grid;
-  }
+  .github-form,  .build-upload,  .create-organization {    grid-template-columns: 1fr;    display: grid;  }
 
   .inline-create input { width: auto; }
   .github-connected { grid-template-columns: 1fr; }
@@ -1997,8 +1996,7 @@
 }
 .markdown-code-block {  margin: 1.1em 0;
   padding: 16px;  overflow: auto;
-  border-radius: 14px;
-  background: #1f1f1c;
+  border-radius: 14px;  background: #1f1f1c;
   color: #f4f3ee;
 }
 
@@ -2997,8 +2995,7 @@ body {
 .nav-label {
   min-width: 0;  overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
-  opacity: 1;
+  white-space: nowrap;  opacity: 1;
   transition: opacity 0.12s ease;
 }
 
@@ -3997,7 +3994,6 @@ body {
   border-top: 1px solid var(--line);  color: #7c7d77;
   font-size: 0.68rem;
 }
-
 .organization-project-meta span:last-child {
   color: #4d4e49;
   font-weight: 600;
@@ -4644,5 +4640,167 @@ body {
 
   .organization-picker-create-actions {
     justify-content: flex-end;
+  }
+}
+
+/* Project shell cleanup and dashboard navigation */
+.project-mode .devdock-main {
+  background: var(--page);
+}
+
+.project-mode .content-card,
+.project-mode .wiki-tree-panel,
+.project-mode .wiki-content-panel {
+  border: 0;
+  box-shadow: none;
+  background: var(--page);
+}
+
+.project-mode .content-card {
+  padding: 24px 8px;
+}
+
+.project-mode .wiki-tree-panel {
+  padding: 24px 8px;
+}
+
+.project-mode .wiki-content-panel {
+  padding: 32px 8px;
+}
+
+.dashboard-project-header,
+.dashboard-workflow {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.dashboard-project-header {
+  padding: 8px 8px 28px;
+}
+
+.dashboard-project-header h2 {
+  margin: 7px 0 5px;
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  letter-spacing: -0.045em;
+}
+
+.dashboard-project-header p {
+  margin: 0;
+  max-width: 760px;
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 0.82rem;
+}
+
+.dashboard-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0 8px;
+}
+
+.dashboard-nav-button {
+  min-width: 0;
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px 18px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--page);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s ease, transform 0.14s ease;
+}
+
+.dashboard-nav-button:hover {
+  background: var(--soft);
+  transform: translateY(-1px);
+}
+
+.dashboard-nav-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--soft);
+  color: #5e605a;
+  font-size: 1rem;
+}
+
+.dashboard-nav-title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.dashboard-workflow {
+  margin: 14px 8px 0;
+  padding: 18px 0 0;
+  border-top: 1px solid var(--line);
+}
+
+.dashboard-workflow h3 {
+  margin: 5px 0 0;
+  font-size: 0.92rem;
+}
+
+.project-mode .primary-button {
+  border-color: transparent;
+}
+
+.project-mode .nav-item.active {
+  box-shadow: none;
+}
+
+.project-mode .wiki-tree-item.selected {
+  box-shadow: none;
+}
+
+.project-mode .workspace-card-link:hover {
+  color: var(--ink);
+}
+
+.project-mode .workspace-project-indicator.active {
+  background: #c8cac5;
+}
+
+.organization-picker-card-info > span {
+  color: #777872;
+}
+
+.organization-picker-mark {
+  color: #5e605a;
+}
+
+@media (max-width: 900px) {
+  .dashboard-nav-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-project-header,
+  .dashboard-workflow {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboard-nav-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-project-header {
+    padding-bottom: 20px;
   }
 }
