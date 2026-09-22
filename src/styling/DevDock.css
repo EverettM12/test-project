@@ -997,8 +997,7 @@
   .quick-dock { grid-column: auto; }
 
   .inline-create,
-  .github-form,  .build-upload,  .create-organization {    grid-template-columns: 1fr;    display: grid;  }
-  .inline-create input { width: auto; }
+  .github-form,  .build-upload,  .create-organization {    grid-template-columns: 1fr;    display: grid;  }  .inline-create input { width: auto; }
   .github-connected { grid-template-columns: 1fr; }
   .table-head { display: none; }
   .table-row { grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -1997,7 +1996,6 @@
   padding: 16px;  overflow: auto;
   border-radius: 14px;  background: #1f1f1c;
   color: #f4f3ee;}
-
 .markdown-code-block code {
   padding: 0;
   background: transparent;
@@ -2997,8 +2995,7 @@ body {
   transition: opacity 0.12s ease;
 }
 .devdock-sidebar .projects-label {
-  margin-top: 10px;
-  opacity: 0;
+  margin-top: 10px;  opacity: 0;
   visibility: hidden;
   transition: opacity 0.16s ease;
 }
@@ -3997,8 +3994,7 @@ body {
 }
 .organization-project-list .organization-project-card {
   min-height: 88px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: grid;  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 18px;
 }
@@ -4974,4 +4970,30 @@ body {
 
 .dashboard-nav-button {
   box-shadow: none;
+}
+
+/* Neutral button hover states */
+.primary-button:hover:not(:disabled) {
+  background: var(--soft);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.workspace-card-link:hover {
+  color: var(--ink);
+}
+
+.organization-picker-new-button:hover:not(:disabled) {
+  background: var(--soft);
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.organization-picker-card:hover {
+  border-color: var(--line);
+  box-shadow: none;
+}
+
+.dashboard-nav-button:hover {
+  background: var(--soft);
 }
