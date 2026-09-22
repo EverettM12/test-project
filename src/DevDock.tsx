@@ -1114,23 +1114,13 @@ function Dashboard({
         <button type="button" className="primary-button" onClick={() => onView('timeline')}>View activity</button>
       </section>
 
-      <DashboardDock title="Wiki" icon="W" value={String(wikiPages.length)} detail="pages" onClick={() => onView('wiki')}>
-        {wikiPages.slice(0, 2).map((page) => <span key={page.id}>{page.title}</span>)}
-        {wikiPages.length === 0 && <span className="muted">No pages yet</span>}
-      </DashboardDock>
+      <DashboardDock title="Wiki" icon="W" value={String(wikiPages.length)} detail="pages" onClick={() => onView('wiki')} />
 
-      <DashboardDock title="Bug Tracker" icon="!" value={String(openBugs)} detail="open bugs" onClick={() => onView('bugs')}>
-        <div className="metric-row"><span>Critical / High</span><strong>{highPriority}</strong></div>
-      </DashboardDock>
+      <DashboardDock title="Bug Tracker" icon="!" value={String(openBugs)} detail="open bugs" onClick={() => onView('bugs')} />
 
-      <DashboardDock title="Builds" icon="↥" value={String(builds.length)} detail="uploaded" onClick={() => onView('builds')}>
-        {builds.slice(0, 2).map((build) => <span key={build.id}>v{build.version} · {build.branch}</span>)}
-        {builds.length === 0 && <span className="muted">No builds yet</span>}
-      </DashboardDock>
+      <DashboardDock title="Builds" icon="↥" value={String(builds.length)} detail="uploaded" onClick={() => onView('builds')} />
 
-      <DashboardDock title="GitHub" icon="◉" value={project?.github_repo ? 'Connected' : 'Not connected'} detail="repository" onClick={() => onView('github')}>
-        <span className="github-mini">{project?.github_repo ?? 'Connect a repository'}</span>
-      </DashboardDock>
+      <DashboardDock title="GitHub" icon="◉" value={project?.github_repo ? 'Connected' : 'Not connected'} detail="repository" onClick={() => onView('github')} />
 
       <DashboardDock title="Timeline" icon="↯" value={String(timeline.length)} detail="recent events" onClick={() => onView('timeline')}>
         
