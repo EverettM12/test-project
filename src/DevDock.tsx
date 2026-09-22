@@ -1056,7 +1056,7 @@ function DevDock() {
         >
           <span>↗</span>
           Connect
-        </button>
+        </button>}
       </header>
 
       <aside className={`devdock-sidebar${menuOpen ? ' open' : ''}`}>
