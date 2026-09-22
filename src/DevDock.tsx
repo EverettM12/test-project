@@ -1205,7 +1205,7 @@ function DevDock() {
       </header>
 
       <aside className={`devdock-sidebar${menuOpen ? ' open' : ''}`}>
-        <div className="sidebar-label projects-label">PROJECTS</div>
+        <div className="sidebar-label projects-label">NAVIGATION</div>
 
         {(project ? projectViews : organizationViews).map((item) => (
           <button
@@ -1224,6 +1224,7 @@ function DevDock() {
         ))}
 
         {project && <>
+          <div className="sidebar-label projects-label">PROJECTS</div>
           <div className="project-list">
           {projects.map((item) => (
             <button
