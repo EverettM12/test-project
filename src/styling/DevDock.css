@@ -1015,3 +1015,499 @@
   .organization-switcher span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .integration-grid { grid-template-columns: 1fr; }
 }
+
+
+/* Spacious layout and functional navigation refinements */
+.devdock-topbar {
+  height: 88px;
+  padding: 0 34px;
+  gap: 22px;
+}
+
+.menu-button {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+}
+
+.brand-lockup {
+  font-size: 1.24rem;
+  letter-spacing: -0.03em;
+}
+
+.organization-area {
+  position: relative;
+}
+
+.organization-switcher {
+  min-width: 230px;
+  min-height: 54px;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-radius: 17px;
+  font-size: 0.98rem;
+}
+
+.active-project-label {
+  min-height: 44px;
+  padding-inline: 16px;
+  border-radius: 14px;
+}
+
+.devdock-sidebar {
+  top: 88px;
+  width: 286px;
+  transform: translateX(-100%);
+  padding: 34px 20px 28px;
+  transition: transform 0.24s cubic-bezier(.22,.61,.36,1);
+  box-shadow: 20px 0 55px rgba(0, 0, 0, 0.10);
+}
+
+.devdock-sidebar.open {
+  transform: translateX(0);
+}
+
+.sidebar-heading {
+  padding-inline: 12px;
+  padding-bottom: 30px;
+  font-size: 1.12rem;
+}
+
+.nav-item,
+.project-item,
+.sidebar-switcher,
+.signout-button {
+  min-height: 48px;
+  border-radius: 13px;
+}
+
+.nav-item {
+  padding-inline: 12px;
+  gap: 13px;
+  font-size: 0.93rem;
+}
+
+.project-item {
+  padding-left: 46px;
+  font-size: 0.9rem;
+}
+
+.devdock-main {
+  max-width: 1680px;
+  margin-left: 0;
+  padding: 138px 72px 84px;
+  transition: padding-left 0.24s ease;
+}
+
+.workspace-header {
+  margin-bottom: 38px;
+  gap: 34px;
+}
+
+.workspace-header h1 {
+  margin-top: 10px;
+  font-size: clamp(2.3rem, 4.5vw, 3.5rem);
+}
+
+.workspace-header p {
+  margin-top: 8px;
+  font-size: 1rem;
+}
+
+.dashboard-grid {
+  gap: 24px;
+}
+
+.dock {
+  min-height: 254px;
+  padding: 31px;
+  border-radius: 26px;
+}
+
+.hero-dock {
+  min-height: 220px;
+}
+
+.hero-dock h2 {
+  margin-top: 10px;
+  font-size: 2.25rem;
+}
+
+.hero-dock p,
+.quick-dock p {
+  max-width: 760px;
+  margin-top: 12px;
+  line-height: 1.7;
+  font-size: 0.98rem;
+}
+
+.dock-stat {
+  margin: 38px 0 22px;
+}
+
+.dock-stat strong {
+  font-size: 2.45rem;
+}
+
+.dock-title {
+  font-size: 1rem;
+}
+
+.quick-dock {
+  min-height: 180px;
+}
+
+.content-card {
+  padding: 38px;
+  border-radius: 26px;
+}
+
+.section-head {
+  margin-bottom: 38px;
+  gap: 32px;
+}
+
+.section-head h2 {
+  margin-top: 10px;
+  font-size: 2rem;
+}
+
+.section-head p {
+  margin-top: 10px;
+  line-height: 1.7;
+}
+
+.organization-shell {
+  padding: 42px;
+}
+
+.organization-panel {
+  padding: 64px;
+  border-radius: 34px;
+}
+
+/* Organization popover */
+.organization-popover {
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 60;
+  width: 310px;
+  padding: 12px;
+}
+
+/* Menu overlay now works at every desktop width */
+.sidebar-backdrop {
+  display: block;
+  position: fixed;
+  inset: 88px 0 0;
+  z-index: 30;
+  padding: 0;
+  border: 0;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+/* Wiki: documentation tree + large reading/editing surface */
+.wiki-layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: stretch;
+}
+
+.wiki-tree-panel,
+.wiki-content-panel {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 28px;
+  background: var(--card);
+  box-shadow: 0 10px 36px rgba(0, 0, 0, 0.035);
+}
+
+.wiki-tree-panel {
+  padding: 30px 22px;
+}
+
+.wiki-tree-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 8px 24px;
+}
+
+.wiki-tree-header h2 {
+  margin: 8px 0 0;
+  font-size: 1.25rem;
+  letter-spacing: -0.025em;
+}
+
+.wiki-count {
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.wiki-create {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  margin: 0 8px 26px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.wiki-create input {
+  min-width: 0;
+  height: 46px;
+  padding: 0 13px;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  outline: none;
+  background: #faf9f5;
+}
+
+.wiki-tree {
+  min-height: 500px;
+  overflow: auto;
+  padding: 0 4px 8px;
+}
+
+.wiki-tree-level {
+  position: relative;
+  display: grid;
+  gap: 3px;
+}
+
+.wiki-tree-level:not(.root) {
+  margin-left: 16px;
+  padding-left: 15px;
+  border-left: 1px solid var(--line);
+}
+
+.wiki-tree-node {
+  min-width: 0;
+}
+
+.wiki-tree-item {
+  width: 100%;
+  min-height: 40px;
+  display: grid;
+  grid-template-columns: 17px 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: #55544f;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.88rem;
+}
+
+.wiki-tree-item:hover,
+.wiki-tree-item.selected {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.wiki-tree-item.selected {
+  font-weight: 600;
+}
+
+.wiki-tree-toggle {
+  color: #99978f;
+  font-size: 0.72rem;
+  text-align: center;
+}
+
+.wiki-tree-toggle.empty {
+  opacity: 0.45;
+}
+
+.wiki-tree-icon {
+  color: #8a887f;
+  font-size: 0.77rem;
+}
+
+.wiki-tree-children {
+  padding-top: 2px;
+}
+
+.wiki-content-panel {
+  min-height: 640px;
+  padding: 48px 60px 58px;
+}
+
+.wiki-page-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.wiki-page-header h2 {
+  margin: 8px 0 4px;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  letter-spacing: -0.045em;
+}
+
+.wiki-page-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.wiki-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 26px;
+  color: #9b9991;
+  font-size: 0.76rem;
+}
+
+.wiki-breadcrumb strong {
+  color: #5f5d57;
+}
+
+.wiki-editor {
+  display: grid;
+  gap: 14px;
+}
+
+.wiki-editor > input {
+  width: 100%;
+  height: 54px;
+  padding: 0 16px;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: #faf9f5;
+  color: var(--ink);
+  font-size: 1.05rem;
+  outline: none;
+}
+
+.wiki-editor > textarea {
+  width: 100%;
+  min-height: 470px;
+  resize: vertical;
+  box-sizing: border-box;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #faf9f5;
+  color: var(--ink);
+  font: 0.94rem/1.8 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  outline: none;
+}
+
+.wiki-empty-content {
+  min-height: 540px;
+  display: grid;
+  align-content: center;
+  justify-items: start;
+  padding: 40px;
+}
+
+.wiki-empty-content h2 {
+  margin: 10px 0 6px;
+  font-size: 2.3rem;
+  letter-spacing: -0.04em;
+}
+
+.wiki-empty-content p {
+  max-width: 560px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+@media (max-width: 1100px) {
+  .devdock-sidebar {
+    top: 88px;
+  }
+
+  .devdock-main {
+    margin-left: 0;
+    padding-top: 126px;
+  }
+}
+
+@media (max-width: 880px) {
+  .devdock-topbar {
+    padding-inline: 22px;
+  }
+
+  .organization-switcher {
+    min-width: 0;
+    width: min(230px, 42vw);
+  }
+
+  .devdock-main {
+    padding-inline: 30px;
+  }
+
+  .wiki-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .wiki-tree-panel {
+    max-height: 430px;
+  }
+
+  .wiki-content-panel {
+    padding: 38px 30px 44px;
+  }
+}
+
+@media (max-width: 760px) {
+  .devdock-topbar {
+    height: 76px;
+    padding-inline: 12px;
+  }
+
+  .devdock-sidebar {
+    top: 76px;
+  }
+
+  .sidebar-backdrop {
+    inset: 76px 0 0;
+  }
+
+  .devdock-main {
+    padding: 112px 18px 54px;
+  }
+
+  .organization-switcher {
+    width: min(190px, 48vw);
+    min-height: 48px;
+    padding-inline: 14px;
+  }
+
+  .content-card {
+    padding: 26px 22px;
+  }
+
+  .wiki-tree-panel {
+    padding: 24px 18px;
+  }
+
+  .wiki-content-panel {
+    padding: 30px 22px 36px;
+  }
+
+  .wiki-page-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
