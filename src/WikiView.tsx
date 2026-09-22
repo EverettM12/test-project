@@ -58,7 +58,7 @@ function WikiView({
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropTarget, setDropTarget] = useState<{ id: string | null; position: DropPosition } | null>(null);
-  const [editorMode, setEditorMode] = useState<EditorMode>('write');
+  const [editorMode, setEditorMode] = useState<EditorMode>('preview');
   const [draftTitle, setDraftTitle] = useState('');
   const [draftContent, setDraftContent] = useState('');
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -126,6 +126,18 @@ function WikiView({
       JSON.stringify(Array.from(expandedIds)),
     );
   }, [expandedIds, projectId]);
+
+  useEffect(() => {
+    if (!projectId) return;
+
+    window.setTimeout(() => {
+      const tree = document.querySelector('[data-wiki-tree="' + projectId + '"]');
+      if (tree instanceof HTMLElement) {
+        const savedScroll = Number(localStorage.getItem('test-project:wiki:scroll:' + projectId) ?? 0);
+        tree.scrollTop = Number.isFinite(savedScroll) ? savedScroll : 0;
+      }
+    }, 0);
+  }, [projectId]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -359,7 +371,19 @@ function WikiView({
           </button>
         </div>
 
-        <div className="wiki-tree" onDragEnd={handleDragEnd}>
+        <div
+          className="wiki-tree"
+          data-wiki-tree={projectId ?? undefined}
+          onDragEnd={handleDragEnd}
+          onScroll={(event) => {
+            if (projectId) {
+              localStorage.setItem(
+                'test-project:wiki:scroll:' + projectId,
+                String(event.currentTarget.scrollTop),
+              );
+            }
+          }}
+        >
           {childrenOf(null).map((page) => (
             <WikiTreeNode
               key={page.id}
