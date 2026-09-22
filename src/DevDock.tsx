@@ -4,7 +4,6 @@ import WikiView from './WikiView.tsx';
 import './styling/DevDock.css';
 
 type View = 'dashboard' | 'wiki' | 'bugs' | 'builds' | 'github' | 'timeline';
-type SidebarIconName = 'dashboard' | 'wiki' | 'bugs' | 'builds' | 'github' | 'timeline';
 
 type Organization = { id: string; name: string; slug: string; created_by: string };
 type Project = { id: string; name: string; slug: string; description: string; github_repo: string | null; github_branch: string };
