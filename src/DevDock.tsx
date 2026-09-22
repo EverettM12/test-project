@@ -13,31 +13,14 @@ type Build = { id: string; version: string; branch: string; original_filename: s
 type WikiPage = { id: string; title: string; slug: string; content: string; parent_id: string | null; sort_order: number; updated_at: string };
 type TimelineEvent = { id: string; event_type: string; title: string; description: string; created_at: string };
 
-const views: Array<{ id: View; label: string; icon: SidebarIconName }> = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { id: 'wiki', label: 'Wiki', icon: 'wiki' },
-  { id: 'bugs', label: 'Bug Tracker', icon: 'bugs' },
-  { id: 'builds', label: 'Builds', icon: 'builds' },
-  { id: 'github', label: 'GitHub', icon: 'github' },
-  { id: 'timeline', label: 'Timeline', icon: 'timeline' },
+const views: Array<{ id: View; label: string; icon: string }> = [
+  { id: 'dashboard', label: 'Dashboard', icon: '⌂' },
+  { id: 'wiki', label: 'Wiki', icon: 'W' },
+  { id: 'bugs', label: 'Bug Tracker', icon: '!' },
+  { id: 'builds', label: 'Builds', icon: '↥' },
+  { id: 'github', label: 'GitHub', icon: '◉' },
+  { id: 'timeline', label: 'Timeline', icon: '↯' },
 ];
-
-function SidebarIcon({ name }: { name: SidebarIconName }) {
-  const paths: Record<SidebarIconName, string> = {
-    dashboard: 'M4 10.5 8 6l4 4.5M4 10.5V18h4v-4h4v4h4v-7.5M2.5 18h15',
-    wiki: 'M5 4.5h8.5A1.5 1.5 0 0 1 15 6v11.5H6.5A1.5 1.5 0 0 1 5 16V4.5Zm0 0H4A1.5 1.5 0 0 0 2.5 6v10A1.5 1.5 0 0 0 4 17.5h1',
-    bugs: 'M7 5.5h6A2.5 2.5 0 0 1 15.5 8v5A2.5 2.5 0 0 1 13 15.5H7A2.5 2.5 0 0 1 4.5 13V8A2.5 2.5 0 0 1 7 5.5Zm1-2v2m4-2v2M3.5 9H6m9 0h2.5M3.5 12H6m9 0h2.5',
-    builds: 'M9 13.5V4m0 0L6 7m3-3 3 3M4 15.5v1A1.5 1.5 0 0 0 5.5 18h7A1.5 1.5 0 0 0 14 16.5v-1',
-    github: 'M9 17.5a7 7 0 1 1 4.7-12.2M9 17.5a3 3 0 1 0 0-6M9 17.5c1.4 0 2.5-1.1 2.5-2.5S10.4 12.5 9 12.5M12 5.5h4.5V10',
-    timeline: 'M3.5 14.5 7 10l3 2.5 4.5-6M13.5 6.5H14.5V7.5',
-  };
-
-  return (
-    <svg viewBox="0 0 18 18" aria-hidden="true" className="sidebar-icon-svg">
-      <path d={paths[name]} fill="none" stroke="currentColor" strokeWidth="1.45" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
 
 function formatDate(value: string): string {
   return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
@@ -846,7 +829,7 @@ function DevDock() {
               setMessage('');
             }}
           >
-            <span className="nav-icon"><SidebarIcon name={item.icon} /></span><span className="nav-label">{item.label}</span>
+            <span className="nav-icon">{item.icon}</span><span className="nav-label">{item.label}</span>
           </button>
         ))}
 
