@@ -806,7 +806,7 @@ function DevDock() {
     setWikiPages([]);
     setTimeline([]);
     setSelectedWiki(null);
-    setView('dashboard');
+    setView('organization');
     setError('');
     setMessage('');
     setOrganizationPickerOpen(true);
