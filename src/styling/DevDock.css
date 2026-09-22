@@ -998,7 +998,6 @@
 
   .inline-create,
   .github-form,  .build-upload,  .create-organization {    grid-template-columns: 1fr;    display: grid;  }
-
   .inline-create input { width: auto; }
   .github-connected { grid-template-columns: 1fr; }
   .table-head { display: none; }
@@ -1997,8 +1996,7 @@
 .markdown-code-block {  margin: 1.1em 0;
   padding: 16px;  overflow: auto;
   border-radius: 14px;  background: #1f1f1c;
-  color: #f4f3ee;
-}
+  color: #f4f3ee;}
 
 .markdown-code-block code {
   padding: 0;
@@ -2998,7 +2996,6 @@ body {
   white-space: nowrap;  opacity: 1;
   transition: opacity 0.12s ease;
 }
-
 .devdock-sidebar .projects-label {
   margin-top: 10px;
   opacity: 0;
@@ -3998,7 +3995,6 @@ body {
   color: #4d4e49;
   font-weight: 600;
 }
-
 .organization-project-list .organization-project-card {
   min-height: 88px;
   display: grid;
@@ -4802,5 +4798,143 @@ body {
 
   .dashboard-project-header {
     padding-bottom: 20px;
+  }
+}
+
+/* Refine project shell, navigation tiles, and accent restraint */
+.project-mode .content-card,
+.project-mode .wiki-tree-panel,
+.project-mode .wiki-content-panel {
+  border: 0;
+  background: var(--page);
+  box-shadow: none;
+}
+
+.project-mode .content-card {
+  padding: 20px 8px;
+}
+
+.project-mode .wiki-tree-panel {
+  padding: 20px 8px;
+}
+
+.project-mode .wiki-content-panel {
+  padding: 28px 8px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+}
+
+.dashboard-project-header {
+  min-width: 0;
+  padding: 8px 8px 28px;
+}
+
+.dashboard-project-header h2 {
+  margin: 7px 0 5px;
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  letter-spacing: -0.045em;
+}
+
+.dashboard-project-header p {
+  max-width: 760px;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+  font-size: 0.82rem;
+}
+
+.dashboard-nav-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 0 8px;
+}
+
+.dashboard-nav-button {
+  width: 132px;
+  height: 104px;
+  flex: 0 0 132px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--page);
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s ease, transform 0.14s ease;
+}
+
+.dashboard-nav-button:hover {
+  background: var(--soft);
+  transform: translateY(-1px);
+}
+
+.dashboard-nav-icon {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--soft);
+  color: #5e605a;
+  font-size: 1rem;
+}
+
+.dashboard-nav-title {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.project-mode .primary-button {
+  border-color: transparent;
+}
+
+.nav-item.active,
+.project-mode .wiki-tree-item.selected {
+  box-shadow: none;
+}
+
+.workspace-card-link:hover {
+  color: var(--ink);
+}
+
+.workspace-project-indicator.active {
+  background: #c8cac5;
+}
+
+.organization-picker-mark {
+  color: #5e605a;
+}
+
+.primary-button {
+  border-color: transparent;
+}
+
+.primary-button:hover:not(:disabled) {
+  border-color: transparent;
+}
+
+@media (max-width: 640px) {
+  .dashboard-nav-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 132px));
+  }
+
+  .dashboard-nav-button {
+    width: 132px;
+    flex-basis: 132px;
   }
 }
