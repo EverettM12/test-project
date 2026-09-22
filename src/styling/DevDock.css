@@ -505,3 +505,34 @@
   font-weight: 700;
   letter-spacing: -0.03em;
 }
+
+/* Project dashboard icon boxes and active project border */
+.dashboard-project-header {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dashboard-nav-icon {
+  width: 64px;
+  min-width: 64px;
+  height: 64px;
+  min-height: 64px;
+  flex: 0 0 64px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-nav-button:hover .dashboard-nav-icon {
+  background: #ffffff;
+  border-color: #d7d8d5;
+}
+
+.dashboard-nav-button {
+  box-shadow: none;
+}
