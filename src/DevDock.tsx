@@ -814,7 +814,7 @@ function DevDock() {
 
       <aside className={`devdock-sidebar${menuOpen ? ' open' : ''}`}>
         <div className="sidebar-heading">{organization.name}</div>
-        <div className="sidebar-label">WORKSPACE</div>
+        
 
         {views.map((item) => (
           <button
@@ -982,17 +982,13 @@ function Dashboard({
       </DashboardDock>
 
       <DashboardDock title="Timeline" icon="↯" value={String(timeline.length)} detail="recent events" onClick={() => onView('timeline')}>
-        <div className="timeline-mini">
-          {timeline.slice(0, 2).map((event) => <div key={event.id}><strong>{event.title}</strong><span>{formatDate(event.created_at)}</span></div>)}
-          {timeline.length === 0 && <span className="muted">Activity will appear here</span>}
-        </div>
+        
       </DashboardDock>
 
       <section className="dock quick-dock">
         <div>
           <span className="dock-kicker">WORKFLOW</span>
           <h3>Your workspace is ready.</h3>
-          <p>Keep documentation, bugs, builds, source control, and project history together.</p>
         </div>
         <div className="quick-actions">
           <button type="button" onClick={() => onView('bugs')}>Report bug</button>
@@ -1018,7 +1014,6 @@ function DashboardDock({
     <button type="button" className="dock dashboard-dock" onClick={onClick}>
       <div className="dock-title"><span className="dock-icon">{icon}</span><span>{title}</span><span className="dock-arrow">→</span></div>
       <div className="dock-stat"><strong>{value}</strong><span>{detail}</span></div>
-      <div className="dock-list">{children}</div>
     </button>
   );
 }
