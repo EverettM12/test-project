@@ -997,8 +997,7 @@
   .quick-dock { grid-column: auto; }
 
   .inline-create,
-  .github-form,
-  .build-upload,
+  .github-form,  .build-upload,
   .create-organization {
     grid-template-columns: 1fr;
     display: grid;
@@ -1997,8 +1996,7 @@
 .markdown-rendered code {
   padding: 2px 6px;
   border-radius: 6px;
-  background: #eeece6;
-  font: 0.88em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: #eeece6;  font: 0.88em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
 .markdown-code-block {
@@ -2998,7 +2996,6 @@ body {
   place-items: center;
   color: #7f817a;
 }
-
 .sidebar-icon-svg {
   width: 17px;
   height: 17px;
@@ -3997,8 +3994,7 @@ body {
   overflow: hidden;
   color: #6f706b;
   font-size: 0.76rem;
-  line-height: 1.55;
-  display: -webkit-box;
+  line-height: 1.55;  display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 4;
 }
@@ -4296,4 +4292,16 @@ body {
   .workspace-accent-picker {
     grid-template-columns: 74px minmax(0, 1fr);
   }
+}
+.devdock-sidebar:not(.open) .nav-item {
+  align-items: center;
+  justify-content: center;
+}
+
+.devdock-sidebar:not(.open) .nav-item .nav-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  transform: translate(-50%, -50%);
 }
