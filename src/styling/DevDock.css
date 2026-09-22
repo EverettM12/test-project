@@ -2353,8 +2353,8 @@
   --line: #e4e5e2;
   --soft: #f1f2ef;
   --accent: #3ecf8e;
-  --accent-strong: #24b47e;
-  --accent-soft: #e8fbf2;
+  --accent-strong: color-mix(in srgb, var(--accent) 82%, black);
+  --accent-soft: color-mix(in srgb, var(--accent) 11%, white);
 }
 
 * {
@@ -2536,7 +2536,12 @@ body {
 }
 
 .devdock-sidebar:not(.open) .nav-item {
-  width: 46px;
+  width: 38px;
+  min-width: 38px;
+  max-width: 38px;
+  height: 38px;
+  min-height: 38px;
+  max-height: 38px;
   justify-content: center;
   padding: 0;
   margin-bottom: 4px;
@@ -4244,5 +4249,51 @@ body {
     justify-content: space-between;
     padding-top: 12px;
     border-top: 1px solid var(--line);
+  }
+}
+
+
+.workspace-accent-picker {
+  display: grid;
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 12px;
+  align-items: end;
+}
+
+.workspace-accent-swatch,
+.workspace-accent-picker > label {
+  display: grid;
+  gap: 6px;
+  color: #64655f;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.workspace-accent-swatch input[type="color"] {
+  width: 74px;
+  height: 42px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfbfa;
+  cursor: pointer;
+}
+
+.workspace-accent-picker > label input {
+  width: 100%;
+  min-height: 42px;
+  box-sizing: border-box;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfbfa;
+  color: var(--ink);
+  outline: none;
+  font: inherit;
+}
+
+@media (max-width: 680px) {
+  .workspace-accent-picker {
+    grid-template-columns: 74px minmax(0, 1fr);
   }
 }
