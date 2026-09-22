@@ -14,16 +14,60 @@ type WikiPage = { id: string; title: string; slug: string; content: string; pare
 type TimelineEvent = { id: string; event_type: string; title: string; description: string; created_at: string };
 type IncomingInvitation = { id: string; organization_id: string; organization_name: string; email: string; role: 'admin' | 'developer' | 'tester' | 'viewer'; expires_at: string };
 
-const projectViews: Array<{ id: View; label: string; icon: string }> = [
+function GithubIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+      <path d="M9 18c-4.51 2-5-2-7-2" />
+    </svg>
+  );
+}
+
+function WikiIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <line x1="8" x2="21" y1="6" y2="6" />
+      <line x1="8" x2="21" y1="12" y2="12" />
+      <line x1="8" x2="21" y1="18" y2="18" />
+      <line x1="3" x2="3.01" y1="6" y2="6" />
+      <line x1="3" x2="3.01" y1="12" y2="12" />
+      <line x1="3" x2="3.01" y1="18" y2="18" />
+    </svg>
+  );
+}
+
+const projectViews: Array<{ id: View; label: string; icon: ReactNode }> = [
   { id: 'dashboard', label: 'Dashboard', icon: '⌂' },
-  { id: 'wiki', label: 'Wiki', icon: 'W' },
+  { id: 'wiki', label: 'Wiki', icon: <WikiIcon /> },
   { id: 'bugs', label: 'Bug Tracker', icon: '!' },
   { id: 'builds', label: 'Builds', icon: '↥' },
-  { id: 'github', label: 'GitHub', icon: '◉' },
+  { id: 'github', label: 'GitHub', icon: <GithubIcon /> },
   { id: 'timeline', label: 'Timeline', icon: '↯' },
 ];
 
-const organizationViews: Array<{ id: View; label: string; icon: string }> = [
+const organizationViews: Array<{ id: View; label: string; icon: ReactNode }> = [
   { id: 'organization', label: 'Projects', icon: '⌂' },
   { id: 'organization-team', label: 'Team', icon: '◎' },
   { id: 'organization-integrations', label: 'Integrations', icon: '◇' },
@@ -1400,13 +1444,13 @@ function Dashboard({
         <button type="button" className="primary-button" onClick={() => onView('timeline')}>View activity</button>
       </section>
 
-      <DashboardDock title="Wiki" icon="W" value={String(wikiPages.length)} detail="pages" onClick={() => onView('wiki')} />
+      <DashboardDock title="Wiki" icon={<WikiIcon size={18} />} value={String(wikiPages.length)} detail="pages" onClick={() => onView('wiki')} />
 
       <DashboardDock title="Bug Tracker" icon="!" value={String(openBugs)} detail="open bugs" onClick={() => onView('bugs')} />
 
       <DashboardDock title="Builds" icon="↥" value={String(builds.length)} detail="uploaded" onClick={() => onView('builds')} />
 
-      <DashboardDock title="GitHub" icon="◉" value={project?.github_repo ? 'Connected' : 'Not connected'} detail="repository" onClick={() => onView('github')} />
+      <DashboardDock title="GitHub" icon={<GithubIcon size={18} />} value={project?.github_repo ? 'Connected' : 'Not connected'} detail="repository" onClick={() => onView('github')} />
 
       <DashboardDock title="Timeline" icon="↯" value={String(timeline.length)} detail="recent events" onClick={() => onView('timeline')}>
         
@@ -1431,7 +1475,7 @@ function DashboardDock({
   title, icon, value, detail, onClick,
 }: {
   title: string;
-  icon: string;
+  icon: ReactNode;
   value: string;
   detail: string;
   onClick: () => void;
