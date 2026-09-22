@@ -538,7 +538,7 @@ function DevDock() {
     setGithubOverviewError('');
 
     if (nextProject.github_repo) {
-      void loadGithubOverview(nextProject.github_repo);
+      void loadGithubOverview();
     }
 
     const savedWikiId = localStorage.getItem(`test-project:wiki:selected:${nextProject.id}`);
@@ -948,27 +948,10 @@ function DevDock() {
     }
   }
 
-  async function fetchGithubJson<T>(url: string): Promise<T> {
-    const response = await fetch(url, {
-      headers: {
-        Accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error(`GitHub returned ${response.status} for this request.`);
-    }
-
-    return await response.json() as T;
-  }
-
-  async function loadGithubOverview(repoValue: string) {
-    const repo = repoValue.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/$/, '');
-
-    if (!repo || !/^[^/]+\/[^/]+$/.test(repo)) {
+  async function loadGithubOverview() {
+    if (!project?.id) {
       setGithubOverview(null);
-      setGithubOverviewError('Enter a GitHub repository in owner/repository format.');
+      setGithubOverviewError('No project is selected.');
       return;
     }
 
@@ -976,21 +959,20 @@ function DevDock() {
       setGithubOverviewLoading(true);
       setGithubOverviewError('');
 
-      const encodedRepo = repo.split('/').map((part) => encodeURIComponent(part)).join('/');
-      const [commits, branches, pullRequests, issues] = await Promise.all([
-        fetchGithubJson<GithubCommit[]>(`https://api.github.com/repos/${encodedRepo}/commits?per_page=6`),
-        fetchGithubJson<GithubBranch[]>(`https://api.github.com/repos/${encodedRepo}/branches?per_page=12`),
-        fetchGithubJson<GithubPullRequest[]>(`https://api.github.com/repos/${encodedRepo}/pulls?state=open&per_page=6`),
-        fetchGithubJson<GithubIssue[]>(`https://api.github.com/repos/${encodedRepo}/issues?state=open&per_page=6`),
-      ]);
-
-      setGithubOverview({
-        commits,
-        branches,
-        pullRequests,
-        issues: issues.filter((issue) => !issue.pull_request),
-        fetchedAt: new Date().toISOString(),
+      const { data, error: functionError } = await supabase.functions.invoke('github-private-overview', {
+        body: { project_id: project.id },
       });
+
+      if (functionError) {
+        throw functionError;
+      }
+
+      const payload = data as GithubOverview & { error?: string };
+      if (payload.error) {
+        throw new Error(payload.error);
+      }
+
+      setGithubOverview(payload);
     } catch (githubError) {
       setGithubOverview(null);
       setGithubOverviewError(
@@ -1031,7 +1013,7 @@ function DevDock() {
       setProjects((current) => current.map((item) => item.id === project.id ? updatedProject : item));
       setGithubRepo(repo);
       setGithubBranch(branch);
-      void loadGithubOverview(repo);
+      void loadGithubOverview();
       setMessage('GitHub repository connected.');
       await addTimeline('github', `GitHub connected: ${repo}`, `Default branch: ${branch}`);
     } catch (githubError) {
@@ -1496,7 +1478,7 @@ function DevDock() {
             onRepo={setGithubRepo}
             onBranch={setGithubBranch}
             onSave={() => void saveGithub()}
-            onRefresh={() => void loadGithubOverview(githubRepo)}
+            onRefresh={() => void loadGithubOverview()}
           />
         )}
 
