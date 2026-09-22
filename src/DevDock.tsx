@@ -948,10 +948,29 @@ function DevDock() {
     }
   }
 
+  async function fetchGithubJson<T>(url: string): Promise<T> {
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('GitHub returned ' + response.status + ' for this request.');
+    }
+
+    return await response.json() as T;
+  }
+
   async function loadGithubOverview(targetProject: Project | null = project) {
-    if (!targetProject?.id) {
+    const repo = targetProject?.github_repo?.trim()
+      .replace(/^https?:\/\/github\.com\//, '')
+      .replace(/\/$/, '');
+
+    if (!repo || !/^[^/]+\/[^/]+$/.test(repo)) {
       setGithubOverview(null);
-      setGithubOverviewError('No project is selected.');
+      setGithubOverviewError('Enter a GitHub repository in owner/repository format.');
       return;
     }
 
@@ -959,20 +978,41 @@ function DevDock() {
       setGithubOverviewLoading(true);
       setGithubOverviewError('');
 
-      const { data, error: functionError } = await supabase.functions.invoke('github-private-overview', {
-        body: { project_id: targetProject.id },
-      });
+      const encodedRepo = repo.split('/').map((part) => encodeURIComponent(part)).join('/');
+      const publicGithubUrl = (path: string) => 'https://api.github.com/repos/' + encodedRepo + '/' + path;
 
-      if (functionError) {
-        throw functionError;
+      try {
+        const [commits, branches, pullRequests, issues] = await Promise.all([
+          fetchGithubJson<GithubCommit[]>(publicGithubUrl('commits?per_page=6')),
+          fetchGithubJson<GithubBranch[]>(publicGithubUrl('branches?per_page=12')),
+          fetchGithubJson<GithubPullRequest[]>(publicGithubUrl('pulls?state=open&per_page=6')),
+          fetchGithubJson<GithubIssue[]>(publicGithubUrl('issues?state=open&per_page=6')),
+        ]);
+
+        setGithubOverview({
+          commits,
+          branches,
+          pullRequests,
+          issues: issues.filter((issue) => !issue.pull_request),
+          fetchedAt: new Date().toISOString(),
+        });
+        return;
+      } catch {
+        const { data, error: functionError } = await supabase.functions.invoke('github-private-overview-v2', {
+          body: { project_id: targetProject.id },
+        });
+
+        if (functionError) {
+          throw functionError;
+        }
+
+        const payload = data as GithubOverview & { error?: string };
+        if (payload.error) {
+          throw new Error(payload.error);
+        }
+
+        setGithubOverview(payload);
       }
-
-      const payload = data as GithubOverview & { error?: string };
-      if (payload.error) {
-        throw new Error(payload.error);
-      }
-
-      setGithubOverview(payload);
     } catch (githubError) {
       setGithubOverview(null);
       setGithubOverviewError(
