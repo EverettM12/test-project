@@ -490,13 +490,13 @@ function DevDock() {
       }
 
       if (targetId) {
-        let ancestor: WikiPage | null = target;
+        let ancestor: WikiPage | null = target ?? null;
         while (ancestor?.parent_id) {
           if (ancestor.parent_id === pageId) {
             setError('A page cannot be moved inside one of its own children.');
             return false;
           }
-          ancestor = wikiPages.find((item) => item.id === ancestor?.parent_id);
+          ancestor = wikiPages.find((item) => item.id === ancestor?.parent_id) ?? null;
         }
       }
 
