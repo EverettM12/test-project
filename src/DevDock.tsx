@@ -778,7 +778,33 @@ function DevDock() {
         )}
       </div>
 
-        <div className="active-project-label">{project?.name ?? 'No project'}</div>
+        <button
+          type="button"
+          className="active-project-label topbar-project"
+          onClick={() => {
+            if (projects.length > 1) {
+              setView('dashboard');
+            }
+          }}
+        >
+          <span className="topbar-project-cube">◇</span>
+          <span>{project?.name ?? 'No project'}</span>
+          {projects.length > 1 && <span className="topbar-chevron">⌄</span>}
+        </button>
+
+        <span className="topbar-branch">
+          <span className="topbar-branch-icon">⑂</span>
+          {project?.github_branch ?? 'main'}
+        </span>
+
+        <button
+          type="button"
+          className="topbar-connect"
+          onClick={() => setView('github')}
+        >
+          <span>↗</span>
+          Connect
+        </button>
       </header>
 
       <aside className={`devdock-sidebar${menuOpen ? ' open' : ''}`}>
