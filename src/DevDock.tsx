@@ -30,6 +30,23 @@ function SettingsIcon({ size = 16 }: { size?: number }) {
   );
 }
 
+function IntegrationsIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg
+      data-component="Octicon"
+      aria-hidden="true"
+      focusable="false"
+      viewBox="0 0 16 16"
+      width={size}
+      height={size}
+      fill="currentColor"
+    >
+      <path d="M8 9.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+      <path d="M8 0a8 8 0 1 1 0 16A8 8 0 0 1 8 0ZM1.5 8a6.5 6.5 0 1 0 13 0 6.5 6.5 0 0 0-13 0Z" />
+    </svg>
+  );
+}
+
 function GithubIcon({ size = 18 }: { size?: number }) {
   return (
     <svg
@@ -88,7 +105,7 @@ const projectViews: Array<{ id: View; label: string; icon: ReactNode }> = [
 const organizationViews: Array<{ id: View; label: string; icon: ReactNode }> = [
   { id: 'organization', label: 'Projects', icon: '⌂' },
   { id: 'organization-team', label: 'Team', icon: '◎' },
-  { id: 'organization-integrations', label: 'Integrations', icon: '◇' },
+  { id: 'organization-integrations', label: 'Integrations', icon: <IntegrationsIcon /> },
   { id: 'workspace', label: 'Organization Settings', icon: <SettingsIcon /> },
 ];
 
@@ -961,7 +978,7 @@ function DevDock() {
       <div className="organization-picker-shell" style={accentStyle}>
         <header className="organization-picker-topbar">
           <div className="organization-picker-brand">
-            <span className="organization-picker-mark">◆</span>
+            <strong className="organization-picker-brand-name">DevDock</strong>
             <span className="organization-picker-slash">/</span>
             <strong>Organizations</strong>
           </div>
