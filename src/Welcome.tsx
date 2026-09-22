@@ -4,7 +4,7 @@ import './styling/Welcome.css';
 
 function Welcome() {
   const [email, setEmail] = useState('');
-  const [_provider, setProvider] = useState('Email');
+  const [provider, setProvider] = useState('Email');
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
