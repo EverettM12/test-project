@@ -14,6 +14,46 @@ type WikiPage = { id: string; title: string; slug: string; content: string; pare
 type TimelineEvent = { id: string; event_type: string; title: string; description: string; created_at: string };
 type IncomingInvitation = { id: string; organization_id: string; organization_name: string; email: string; role: 'admin' | 'developer' | 'tester' | 'viewer'; expires_at: string };
 
+type GithubCommit = {
+  sha: string;
+  html_url: string;
+  commit: {
+    message: string;
+    author: { name: string | null; date: string | null } | null;
+  };
+};
+
+type GithubBranch = {
+  name: string;
+  protected: boolean;
+  commit: { sha: string };
+};
+
+type GithubPullRequest = {
+  number: number;
+  title: string;
+  html_url: string;
+  user: { login: string } | null;
+  updated_at: string;
+};
+
+type GithubIssue = {
+  number: number;
+  title: string;
+  html_url: string;
+  user: { login: string } | null;
+  updated_at: string;
+  pull_request?: unknown;
+};
+
+type GithubOverview = {
+  commits: GithubCommit[];
+  branches: GithubBranch[];
+  pullRequests: GithubPullRequest[];
+  issues: GithubIssue[];
+  fetchedAt: string;
+};
+
 function SettingsIcon({ size = 16 }: { size?: number }) {
   return (
     <svg
@@ -113,6 +153,29 @@ function formatDate(value: string): string {
   return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+function formatDateTime(value: string): string {
+  return new Date(value).toLocaleString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
+
+function formatRelativeGithubDate(value: string | null | undefined): string {
+  if (!value) return 'unknown date';
+
+  const date = new Date(value);
+  const seconds = Math.max(1, Math.floor((Date.now() - date.getTime()) / 1000));
+
+  if (seconds < 60) return 'just now';
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+  if (seconds < 604800) return `${Math.floor(seconds / 86400)}d ago`;
+
+  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
 function formatSize(bytes: number | null): string {
   if (!bytes) return '—';
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
@@ -161,6 +224,9 @@ function DevDock() {
 
   const [githubRepo, setGithubRepo] = useState('');
   const [githubBranch, setGithubBranch] = useState('main');
+  const [githubOverview, setGithubOverview] = useState<GithubOverview | null>(null);
+  const [githubOverviewLoading, setGithubOverviewLoading] = useState(false);
+  const [githubOverviewError, setGithubOverviewError] = useState('');
   const [newProjectOpen, setNewProjectOpen] = useState(false);
   const [accentColor, setAccentColor] = useState<string>(() => {
     if (typeof window === 'undefined') {
@@ -468,6 +534,12 @@ function DevDock() {
     setTimeline((timelineResult.data ?? []) as TimelineEvent[]);
     setGithubRepo(nextProject.github_repo ?? '');
     setGithubBranch(nextProject.github_branch || 'main');
+    setGithubOverview(null);
+    setGithubOverviewError('');
+
+    if (nextProject.github_repo) {
+      void loadGithubOverview(nextProject.github_repo);
+    }
 
     const savedWikiId = localStorage.getItem(`test-project:wiki:selected:${nextProject.id}`);
     const savedWiki = nextWikiPages.find((page) => page.id === savedWikiId) ?? null;
@@ -876,6 +948,61 @@ function DevDock() {
     }
   }
 
+  async function fetchGithubJson<T>(url: string): Promise<T> {
+    const response = await fetch(url, {
+      headers: {
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`GitHub returned ${response.status} for this request.`);
+    }
+
+    return await response.json() as T;
+  }
+
+  async function loadGithubOverview(repoValue: string) {
+    const repo = repoValue.trim().replace(/^https?:\/\/github\.com\//, '').replace(/\/$/, '');
+
+    if (!repo || !/^[^/]+\/[^/]+$/.test(repo)) {
+      setGithubOverview(null);
+      setGithubOverviewError('Enter a GitHub repository in owner/repository format.');
+      return;
+    }
+
+    try {
+      setGithubOverviewLoading(true);
+      setGithubOverviewError('');
+
+      const encodedRepo = repo.split('/').map((part) => encodeURIComponent(part)).join('/');
+      const [commits, branches, pullRequests, issues] = await Promise.all([
+        fetchGithubJson<GithubCommit[]>(`https://api.github.com/repos/${encodedRepo}/commits?per_page=6`),
+        fetchGithubJson<GithubBranch[]>(`https://api.github.com/repos/${encodedRepo}/branches?per_page=12`),
+        fetchGithubJson<GithubPullRequest[]>(`https://api.github.com/repos/${encodedRepo}/pulls?state=open&per_page=6`),
+        fetchGithubJson<GithubIssue[]>(`https://api.github.com/repos/${encodedRepo}/issues?state=open&per_page=6`),
+      ]);
+
+      setGithubOverview({
+        commits,
+        branches,
+        pullRequests,
+        issues: issues.filter((issue) => !issue.pull_request),
+        fetchedAt: new Date().toISOString(),
+      });
+    } catch (githubError) {
+      setGithubOverview(null);
+      setGithubOverviewError(
+        githubError instanceof Error
+          ? githubError.message
+          : 'Could not load GitHub data.',
+      );
+    } finally {
+      setGithubOverviewLoading(false);
+    }
+  }
+
   async function saveGithub() {
     if (!project || !githubRepo.trim()) return;
 
@@ -904,6 +1031,7 @@ function DevDock() {
       setProjects((current) => current.map((item) => item.id === project.id ? updatedProject : item));
       setGithubRepo(repo);
       setGithubBranch(branch);
+      void loadGithubOverview(repo);
       setMessage('GitHub repository connected.');
       await addTimeline('github', `GitHub connected: ${repo}`, `Default branch: ${branch}`);
     } catch (githubError) {
@@ -1362,9 +1490,13 @@ function DevDock() {
             repo={githubRepo}
             branch={githubBranch}
             project={project}
+            overview={githubOverview}
+            loading={githubOverviewLoading}
+            error={githubOverviewError}
             onRepo={setGithubRepo}
             onBranch={setGithubBranch}
             onSave={() => void saveGithub()}
+            onRefresh={() => void loadGithubOverview(githubRepo)}
           />
         )}
 
@@ -1731,14 +1863,18 @@ function BuildsView({
 }
 
 function GithubView({
-  repo, branch, project, onRepo, onBranch, onSave,
+  repo, branch, project, overview, loading, error, onRepo, onBranch, onSave, onRefresh,
 }: {
   repo: string;
   branch: string;
   project: Project | null;
+  overview: GithubOverview | null;
+  loading: boolean;
+  error: string;
   onRepo: (value: string) => void;
   onBranch: (value: string) => void;
   onSave: () => void;
+  onRefresh: () => void;
 }) {
   return (
     <section className="content-card">
@@ -1746,14 +1882,19 @@ function GithubView({
         <div>
           <span className="dock-kicker">SOURCE CONTROL</span>
           <h2>GitHub Integration</h2>
-          <p>Connect the repository for this project. The live commits, branches, pull requests, and issue panels can plug into this connection next.</p>
+          <p>Connect a repository to view its live public GitHub activity.</p>
         </div>
+        <button type="button" className="secondary-button github-refresh-button" onClick={onRefresh} disabled={loading || !repo.trim()}>
+          {loading ? 'Refreshing...' : 'Refresh'}
+        </button>
       </div>
+
       <div className="github-form">
         <label>Repository<input value={repo} onChange={(event) => onRepo(event.target.value)} placeholder="EverettM12/currentgame" /></label>
         <label>Default branch<input value={branch} onChange={(event) => onBranch(event.target.value)} placeholder="main" /></label>
         <button type="button" className="primary-button" onClick={onSave}>Save connection</button>
       </div>
+
       {project?.github_repo && (
         <div className="github-connected">
           <span className="connected-dot" />
@@ -1762,18 +1903,110 @@ function GithubView({
           <a href={`https://github.com/${project.github_repo}`} target="_blank" rel="noreferrer">Open on GitHub →</a>
         </div>
       )}
-      <div className="integration-grid">
-        <Integration title="Commits" detail="Live activity dock ready" />
-        <Integration title="Branches" detail="Branch browser ready" />
-        <Integration title="Pull requests" detail="PR panel ready" />
-        <Integration title="Issues" detail="GitHub issue sync ready" />
+
+      {error && <div className="error-banner github-error">{error}</div>}
+
+      {!overview && !loading && !error && (
+        <div className="github-empty-state">
+          <strong>Connect a repository to load live GitHub data.</strong>
+          <span>Public repositories can be read directly from GitHub.</span>
+        </div>
+      )}
+
+      {loading && (
+        <div className="github-loading-state">
+          Loading commits, branches, pull requests, and issues…
+        </div>
+      )}
+
+      {overview && !loading && (
+        <>
+          <div className="github-overview-meta">
+            <span>Live GitHub data</span>
+            <span>Updated {formatDateTime(overview.fetchedAt)}</span>
+          </div>
+
+          <div className="github-data-grid">
+            <GithubDataCard title="Commits" count={overview.commits.length}>
+              {overview.commits.length === 0 ? (
+                <GithubDataEmpty detail="No commits found." />
+              ) : (
+                overview.commits.map((commit) => (
+                  <a className="github-data-row" href={commit.html_url} target="_blank" rel="noreferrer" key={commit.sha}>
+                    <strong>{commit.commit.message.split('\n')[0]}</strong>
+                    <span>{commit.commit.author?.name ?? 'Unknown author'} · {formatRelativeGithubDate(commit.commit.author?.date)}</span>
+                  </a>
+                ))
+              )}
+            </GithubDataCard>
+
+            <GithubDataCard title="Branches" count={overview.branches.length}>
+              {overview.branches.length === 0 ? (
+                <GithubDataEmpty detail="No branches found." />
+              ) : (
+                overview.branches.map((item) => (
+                  <a className="github-data-row github-branch-row" href={`https://github.com/${project?.github_repo ?? repo}/tree/${encodeURIComponent(item.name)}`} target="_blank" rel="noreferrer" key={item.name}>
+                    <strong>{item.name}</strong>
+                    <span>{item.protected ? 'Protected' : 'Unprotected'}</span>
+                  </a>
+                ))
+              )}
+            </GithubDataCard>
+
+            <GithubDataCard title="Pull requests" count={overview.pullRequests.length}>
+              {overview.pullRequests.length === 0 ? (
+                <GithubDataEmpty detail="No open pull requests." />
+              ) : (
+                overview.pullRequests.map((item) => (
+                  <a className="github-data-row" href={item.html_url} target="_blank" rel="noreferrer" key={item.number}>
+                    <strong>#{item.number} · {item.title}</strong>
+                    <span>{item.user?.login ?? 'Unknown author'} · updated {formatRelativeGithubDate(item.updated_at)}</span>
+                  </a>
+                ))
+              )}
+            </GithubDataCard>
+
+            <GithubDataCard title="Issues" count={overview.issues.length}>
+              {overview.issues.length === 0 ? (
+                <GithubDataEmpty detail="No open issues." />
+              ) : (
+                overview.issues.map((item) => (
+                  <a className="github-data-row" href={item.html_url} target="_blank" rel="noreferrer" key={item.number}>
+                    <strong>#{item.number} · {item.title}</strong>
+                    <span>{item.user?.login ?? 'Unknown author'} · updated {formatRelativeGithubDate(item.updated_at)}</span>
+                  </a>
+                ))
+              )}
+            </GithubDataCard>
+          </div>
+        </>
+      )}
+    </section>
+  );
+}
+
+function GithubDataCard({
+  title, count, children,
+}: {
+  title: string;
+  count: number;
+  children: ReactNode;
+}) {
+  return (
+    <section className="github-data-card">
+      <div className="github-data-card-heading">
+        <strong>{title}</strong>
+        <span>{count}</span>
+      </div>
+      <div className="github-data-card-list">
+        {children}
       </div>
     </section>
   );
 }
 
-function Integration({ title, detail }: { title: string; detail: string }) {
-  return <div className="integration-card"><strong>{title}</strong><span>{detail}</span><small>Skeleton</small></div>;
+function GithubDataEmpty({ detail }: { detail: string }) {
+  return <div className="github-data-empty">{detail}</div>;
 }
 
 function TimelineView({ events }: { events: TimelineEvent[] }) {
