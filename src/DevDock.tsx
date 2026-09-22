@@ -129,6 +129,9 @@ function DevDock() {
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
 
   const [newOrganization, setNewOrganization] = useState('');
+  const [organizationSearch, setOrganizationSearch] = useState('');
+  const [newOrganizationOpen, setNewOrganizationOpen] = useState(false);
+  const [organizationProjectCounts, setOrganizationProjectCounts] = useState<Record<string, number>>({});
   const [newBug, setNewBug] = useState('');
   const [selectedWiki, setSelectedWiki] = useState<WikiPage | null>(null);
 
@@ -326,6 +329,23 @@ function DevDock() {
     const merged = [...((created ?? []) as Organization[]), ...joined].filter(
       (item, index, all) => all.findIndex((other) => other.id === item.id) === index,
     );
+
+    const projectCounts: Record<string, number> = {};
+
+    if (merged.length > 0) {
+      const { data: projectRows, error: projectCountError } = await supabase
+        .from('projects')
+        .select('organization_id')
+        .in('organization_id', merged.map((item) => item.id));
+
+      if (!projectCountError) {
+        for (const row of projectRows ?? []) {
+          projectCounts[row.organization_id] = (projectCounts[row.organization_id] ?? 0) + 1;
+        }
+      }
+    }
+
+    setOrganizationProjectCounts(projectCounts);
     setOrganizations(merged);
   }
 
@@ -933,29 +953,116 @@ function DevDock() {
   }
 
   if (!organization) {
+    const normalizedOrganizationSearch = organizationSearch.trim().toLowerCase();
+    const filteredOrganizations = organizations.filter((item) =>
+      !normalizedOrganizationSearch ||
+      [item.name, item.slug].join(' ').toLowerCase().includes(normalizedOrganizationSearch),
+    );
+
     return (
-      <div className="organization-shell" style={accentStyle}>
-        <div className="organization-panel">
-          <div className="brand-lockup">DevDock</div>
-          <span className="eyebrow">YOUR ORGANIZATIONS</span>
-          <h1>Choose an organization.</h1>
-          <p className="organization-copy">
-            Organizations keep people, projects, documentation, builds, and bugs separated.
-            You must enter one before you can work inside it.
-          </p>
-          {error && <div className="error-banner">{error}</div>}
-          <div className="organization-list">
-            {organizations.map((item) => (
-              <button type="button" className="organization-option" key={item.id} onClick={() => void enterOrganization(item)}>
-                <div><strong>{item.name}</strong><span>{item.slug}</span></div>
-                <span className="organization-arrow">→</span>
+      <div className="organization-picker-shell" style={accentStyle}>
+        <header className="organization-picker-topbar">
+          <div className="organization-picker-brand">
+            <span className="organization-picker-mark">◆</span>
+            <span className="organization-picker-slash">/</span>
+            <strong>Organizations</strong>
+          </div>
+          <div className="organization-picker-account">
+            <span>{email}</span>
+          </div>
+        </header>
+
+        <main className="organization-picker-main">
+          <div className="organization-picker-heading">
+            <h1>Your organizations</h1>
+          </div>
+
+          {error && <div className="error-banner organization-picker-error">{error}</div>}
+
+          <div className="organization-picker-toolbar">
+            <label className="organization-picker-search">
+              <span>⌕</span>
+              <input
+                value={organizationSearch}
+                onChange={(event) => setOrganizationSearch(event.target.value)}
+                placeholder="Search for an organization"
+              />
+            </label>
+            <button
+              type="button"
+              className="primary-button organization-picker-new-button"
+              onClick={() => {
+                setNewOrganizationOpen((current) => !current);
+                setError('');
+              }}
+            >
+              <span>＋</span> New organization
+            </button>
+          </div>
+
+          {newOrganizationOpen && (
+            <form
+              className="organization-picker-create"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (newOrganization.trim()) void createOrganization();
+              }}
+            >
+              <div>
+                <span className="dock-kicker">NEW ORGANIZATION</span>
+                <input
+                  autoFocus
+                  value={newOrganization}
+                  onChange={(event) => setNewOrganization(event.target.value)}
+                  placeholder="Organization name"
+                />
+              </div>
+              <div className="organization-picker-create-actions">
+                <button type="button" className="secondary-button" onClick={() => setNewOrganizationOpen(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="primary-button" disabled={!newOrganization.trim()}>
+                  Create organization
+                </button>
+              </div>
+            </form>
+          )}
+
+          <div className="organization-picker-list">
+            {filteredOrganizations.map((item) => (
+              <button
+                type="button"
+                className="organization-picker-card"
+                key={item.id}
+                onClick={() => void enterOrganization(item)}
+              >
+                <span className="organization-picker-card-icon">◇</span>
+                <span className="organization-picker-card-info">
+                  <strong>{item.name}</strong>
+                  <span>Free Plan · {organizationProjectCounts[item.id] ?? 0} projects</span>
+                </span>
+                <span className="organization-picker-card-arrow">→</span>
               </button>
             ))}
+
+            {filteredOrganizations.length === 0 && (
+              <div className="organization-picker-empty">
+                <strong>
+                  {organizations.length === 0 ? 'No organizations yet.' : 'No organizations match your search.'}
+                </strong>
+                <span>
+                  {organizations.length === 0
+                    ? 'Create an organization to get started.'
+                    : 'Try a different organization name or slug.'}
+                </span>
+              </div>
+            )}
+
             {incomingInvitations.length > 0 && (
-              <div className="incoming-invitations">
+              <div className="organization-picker-invitations">
                 <span className="eyebrow">INVITATIONS</span>
                 {incomingInvitations.map((invitation) => (
-                  <article className="incoming-invitation" key={invitation.id}>
+                  <article className="organization-picker-invitation" key={invitation.id}>
                     <div>
                       <strong>{invitation.organization_name}</strong>
                       <span>{invitation.role} · expires {formatDate(invitation.expires_at)}</span>
@@ -971,26 +1078,8 @@ function DevDock() {
                 ))}
               </div>
             )}
-
-            {organizations.length === 0 && incomingInvitations.length === 0 && (
-              <div className="organization-empty">
-                <strong>No organizations yet.</strong>
-                <span>Create your first organization below.</span>
-              </div>
-            )}
           </div>
-          <div className="create-organization">
-            <input
-              value={newOrganization}
-              onChange={(event) => setNewOrganization(event.target.value)}
-              placeholder="Organization name"
-              onKeyDown={(event) => { if (event.key === 'Enter') void createOrganization(); }}
-            />
-            <button type="button" className="primary-button" onClick={() => void createOrganization()}>
-              Create organization
-            </button>
-          </div>
-        </div>
+        </main>
       </div>
     );
   }
