@@ -644,11 +644,15 @@ function WorkspaceView({
 
       onOrganizationDeleted();
     } catch (organizationError) {
-      setError(
+      const errorMessage =
         organizationError instanceof Error
           ? organizationError.message
-          : 'Could not delete organization.',
-      );
+          : typeof organizationError === 'object' &&
+              organizationError !== null &&
+              'message' in organizationError
+            ? String((organizationError as { message: unknown }).message)
+            : 'Could not delete organization.';
+      setError(errorMessage);
     } finally {
       setWorking(false);
     }
