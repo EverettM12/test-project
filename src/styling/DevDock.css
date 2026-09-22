@@ -3238,3 +3238,39 @@ body {
     max-width: 100%;
   }
 }
+
+
+.devdock-sidebar.open .nav-item .nav-label {
+  width: auto;
+  max-width: none;
+  opacity: 1;
+  flex: 1 1 auto;
+}
+
+.devdock-sidebar .nav-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  display: grid;
+  place-items: center;
+}
+
+.devdock-sidebar:not(.open) .nav-item .nav-icon {
+  margin: 0 auto;
+}
+
+.dashboard-grid .wiki-count-preview,
+.dashboard-grid .build-count-preview {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .dashboard-grid .dock-list,
+  .dashboard-grid .timeline-mini {
+    max-height: 32px;
+  }
+
+  .dashboard-grid .dock {
+    min-height: 126px;
+  }
+}
