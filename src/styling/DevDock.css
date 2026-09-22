@@ -3274,3 +3274,70 @@ body {
     min-height: 126px;
   }
 }
+
+
+/* Sidebar overlap fix while keeping the icon rail fixed in place */
+.devdock-sidebar {
+  padding-top: 10px;
+}
+
+.devdock-sidebar .sidebar-heading {
+  top: 9px;
+  left: 70px;
+  height: 20px;
+  line-height: 20px;
+}
+
+.devdock-sidebar .sidebar-label:not(.projects-label) {
+  top: 30px;
+  left: 70px;
+  height: 17px;
+  line-height: 17px;
+}
+
+.devdock-sidebar > .nav-item:first-of-type {
+  margin-top: 31px;
+}
+
+.devdock-sidebar .nav-icon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 20px;
+  display: grid;
+  place-items: center;
+  color: #858780;
+  font-size: 1.05rem;
+  line-height: 1;
+  font-weight: 500;
+}
+
+.devdock-sidebar:not(.open) .nav-item .nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-basis: 20px;
+  margin: 0 auto;
+}
+
+.devdock-sidebar.open .nav-item .nav-icon {
+  width: 20px;
+  height: 20px;
+  flex-basis: 20px;
+}
+
+.devdock-sidebar .nav-item {
+  margin-bottom: 4px;
+}
+
+.devdock-sidebar .projects-label {
+  margin-top: 12px;
+}
+
+.devdock-sidebar.open .project-list {
+  max-height: 220px;
+}
+
+@media (max-width: 760px) {
+  .devdock-sidebar > .nav-item:first-of-type {
+    margin-top: 31px;
+  }
+}
