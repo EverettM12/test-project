@@ -88,6 +88,7 @@ function WorkspaceView({
   const [working, setWorking] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [accentInput, setAccentInput] = useState(accentColor);
 
   const [organizationName, setOrganizationName] = useState(organization.name);
   const [organizationSlug, setOrganizationSlug] = useState(organization.slug);
@@ -116,6 +117,10 @@ function WorkspaceView({
     setOrganizationName(organization.name);
     setOrganizationSlug(organization.slug);
   }, [organization.id, organization.name, organization.slug]);
+
+  useEffect(() => {
+    setAccentInput(accentColor);
+  }, [accentColor]);
 
   useEffect(() => {
     async function loadWorkspace() {
@@ -498,7 +503,6 @@ function WorkspaceView({
     if (!confirmed) {
       return;
     }
-
     setWorking(true);
     setError('');
     setNotice('');
@@ -753,7 +757,7 @@ function WorkspaceView({
               <div>
                 <span className="dock-kicker">APPEARANCE</span>
                 <h2>Accent color</h2>
-                <p>Choose the accent used throughout the site. Your choice is saved for the next load.</p>
+                <p>Choose the accent used throughout the site.</p>
               </div>
             </div>
 
@@ -770,9 +774,21 @@ function WorkspaceView({
               <label>
                 Hex
                 <input
-                  value={accentColor}
+                  value={accentInput}
                   disabled={!canManageOrganization || !onAccentColorChange}
-                  onChange={(event) => onAccentColorChange?.(event.target.value)}
+                  onChange={(event) => {
+                    const nextValue = event.target.value;
+                    setAccentInput(nextValue);
+
+                    if (/^#[0-9a-fA-F]{6}$/.test(nextValue)) {
+                      onAccentColorChange?.(nextValue);
+                    }
+                  }}
+                  onBlur={() => {
+                    if (!/^#[0-9a-fA-F]{6}$/.test(accentInput)) {
+                      setAccentInput(accentColor);
+                    }
+                  }}
                   placeholder="#3ecf8e"
                   maxLength={7}
                 />
@@ -997,8 +1013,7 @@ function WorkspaceView({
           <span className="dock-kicker">DANGER ZONE</span>
           <h2>Delete this organization</h2>
           <p>
-            This removes the organization and all of its projects, documentation, issues, builds,
-            connections, timeline events, and memberships.
+            This removes the organization and all of its projects, documentation, issues, builds,            connections, timeline events, and memberships.
           </p>
           <button type="button" className="danger-button danger-button-large" disabled={working} onClick={() => void deleteOrganization()}>
             {working ? 'Deleting...' : 'Delete organization permanently'}
