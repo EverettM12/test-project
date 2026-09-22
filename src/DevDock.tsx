@@ -4,7 +4,7 @@ import WikiView from './WikiView.tsx';
 import WorkspaceView from './WorkspaceView.tsx';
 import './styling/DevDock.css';
 
-type View = 'organization' | 'organization-team' | 'organization-integrations' | 'organization-usage' | 'organization-billing' | 'dashboard' | 'wiki' | 'bugs' | 'builds' | 'github' | 'timeline' | 'workspace';
+type View = 'organization' | 'organization-team' | 'organization-integrations' | 'dashboard' | 'wiki' | 'bugs' | 'builds' | 'github' | 'timeline' | 'workspace';
 
 type Organization = { id: string; name: string; slug: string; created_by: string };
 type Project = { id: string; name: string; slug: string; description: string; github_repo: string | null; github_branch: string };
@@ -13,6 +13,22 @@ type Build = { id: string; version: string; branch: string; original_filename: s
 type WikiPage = { id: string; title: string; slug: string; content: string; parent_id: string | null; sort_order: number; updated_at: string };
 type TimelineEvent = { id: string; event_type: string; title: string; description: string; created_at: string };
 type IncomingInvitation = { id: string; organization_id: string; organization_name: string; email: string; role: 'admin' | 'developer' | 'tester' | 'viewer'; expires_at: string };
+
+function SettingsIcon({ size = 16 }: { size?: number }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 16 16"
+      width={size}
+      height={size}
+      aria-hidden="true"
+      fill="currentColor"
+    >
+      <path fillRule="evenodd" d="m4.803 8.824 2.373 2.373h1.648l2.373-2.373V7.176L8.824 4.803H7.176L4.803 7.175zm4.894-1.027L8.203 6.303h-.406L6.303 7.796v.406l1.495 1.495h.405l1.494-1.495v-.406Z" clipRule="evenodd" />
+      <path fillRule="evenodd" d="M9.464.25H6.537L5.322 2.68l-.59.34-2.712-.162L.557 5.392l1.497 2.269v.678L.557 10.607l1.463 2.535 2.712-.162.59.34 1.215 2.43h2.927l1.214-2.429.592-.341 2.71.162 1.463-2.534-1.496-2.266v-.684l1.496-2.266-1.463-2.534-2.71.162-.591-.34L9.463.25ZM6.462 3.753 7.464 1.75h1.073l1.001 2.003 1.371.792 2.235-.135.537.93-1.234 1.868v1.584l1.234 1.868-.537.93-2.234-.134-1.372.791-1.001 2.003H7.464l-1.002-2.003-1.37-.792-2.236.135-.537-.93 1.235-1.87V7.21L2.32 5.34l.537-.93 2.236.135Z" clipRule="evenodd" />
+    </svg>
+  );
+}
 
 function GithubIcon({ size = 18 }: { size?: number }) {
   return (
@@ -71,9 +87,7 @@ const organizationViews: Array<{ id: View; label: string; icon: ReactNode }> = [
   { id: 'organization', label: 'Projects', icon: '⌂' },
   { id: 'organization-team', label: 'Team', icon: '◎' },
   { id: 'organization-integrations', label: 'Integrations', icon: '◇' },
-  { id: 'organization-usage', label: 'Usage', icon: '↗' },
-  { id: 'organization-billing', label: 'Billing', icon: '＄' },
-  { id: 'workspace', label: 'Organization Settings', icon: '⚙' },
+  { id: 'workspace', label: 'Organization Settings', icon: <SettingsIcon /> },
 ];
 
 function formatDate(value: string): string {
@@ -1165,37 +1179,11 @@ function DevDock() {
           <OrganizationUtilityView
             title="Integrations"
             kicker="ORGANIZATION"
-            description="Connections shared across this organization appear here. Project-specific GitHub repositories are managed inside each project."
-          >
-            <div className="organization-info-grid">
-              <div><strong>GitHub</strong><span>{projects.filter((item) => Boolean(item.github_repo)).length} connected repositories</span></div>
-              <div><strong>Project integrations</strong><span>Configured per project</span></div>
-            </div>
-          </OrganizationUtilityView>
-        )}
-
-        {view === 'organization-usage' && !project && (
-          <OrganizationUtilityView
-            title="Usage"
-            kicker="ORGANIZATION"
-            description="A single view of the organization's current size. Detailed storage and build usage remains scoped to individual projects."
-          >
-            <div className="organization-info-grid">
-              <div><strong>{projects.length}</strong><span>Projects</span></div>
-              <div><strong>{projects.filter((item) => Boolean(item.github_repo)).length}</strong><span>Connected repositories</span></div>
-            </div>
-          </OrganizationUtilityView>
-        )}
-
-        {view === 'organization-billing' && !project && (
-          <OrganizationUtilityView
-            title="Billing"
-            kicker="ORGANIZATION"
-            description="Billing is organization-level. This area is ready for plan and billing controls without mixing them into project settings."
+            description="Under development."
           >
             <div className="organization-empty-panel">
-              <strong>No billing configuration yet.</strong>
-              <span>Project data and organization membership are kept separate from billing.</span>
+              <strong>Under development</strong>
+              <span>Organization integrations will be available here later.</span>
             </div>
           </OrganizationUtilityView>
         )}
