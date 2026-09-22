@@ -1532,12 +1532,12 @@
 
 .wiki-tree-panel {
   position: sticky;
-  top: 122px;
-  height: calc(100vh - 164px);
-  max-height: 900px;
+  top: 82px;
+  height: auto;
+  max-height: calc(100vh - 112px);
   padding: 30px 22px;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: auto;
 }
 
 .wiki-tree-header {
@@ -1609,8 +1609,8 @@
 }
 
 .wiki-tree {
-  height: calc(100% - 132px);
-  overflow: auto;
+  height: auto;
+  overflow: visible;
   padding: 6px 7px 18px;
   scrollbar-width: thin;
 }
