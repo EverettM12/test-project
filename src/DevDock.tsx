@@ -1167,7 +1167,7 @@ function DevDock() {
             >
               <span className="topbar-project-cube">◇</span>
               <span>{project.name}</span>
-              <span className="project-switcher-chevron">⌄</span>
+              <span>·</span>
             </button>
 
             {projectPickerOpen && (
@@ -1625,10 +1625,7 @@ function Dashboard({
         <div>
           <span className="dock-kicker">ACTIVE PROJECT</span>
           <h2>{project?.name ?? 'No project'}</h2>
-          <p className="dashboard-project-status">
-            <span className="dashboard-status-dot" aria-hidden="true" />
-            {project?.description || 'This project is ready for development.'}
-          </p>
+          <p>{project?.description}</p>
         </div>
       </section>
 
