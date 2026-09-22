@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from 'react';
 import { supabase } from './utils/supabase.ts';
 import './styling/Welcome.css';
+import './styling/Workspace.css';
 
 type View = 'dashboard' | 'wiki' | 'bugs' | 'builds' | 'github' | 'timeline';
 type Organization = { id: string; name: string; slug: string; created_by: string };
