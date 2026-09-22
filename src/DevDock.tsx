@@ -498,7 +498,6 @@ function DevDock() {
 
       const generatedSlug = slugify(trimmedName);
       const slug = generatedSlug || `project-${crypto.randomUUID().slice(0, 6)}`;
-
       const { data, error: insertError } = await supabase
         .from('projects')
         .insert({
@@ -997,8 +996,7 @@ function DevDock() {
               }}
             >
               <span>＋</span> New organization
-            </button>
-          </div>
+            </button>          </div>
 
           {newOrganizationOpen && (
             <form
@@ -1497,8 +1495,7 @@ function OrganizationNewProjectForm({
   );
 }
 
-function OrganizationUtilityView({
-  title,
+function OrganizationUtilityView({  title,
   kicker,
   description,
   children,
@@ -1558,35 +1555,6 @@ function Dashboard({
       <section className="dock quick-dock">
         <div>
           <span className="dock-kicker">WORKFLOW</span>
-          <h3>Your project is ready to work on.</h3>
-        </div>
-        <div className="quick-actions">
-          <button type="button" onClick={() => onView('bugs')}>Report bug</button>
-          <button type="button" onClick={() => onView('builds')}>Upload build</button>
-          <button type="button" onClick={() => onView('wiki')}>Write docs</button>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function DashboardDock({
-  title, icon, value, detail, onClick,
-}: {
-  title: string;
-  icon: ReactNode;
-  value: string;
-  detail: string;
-  onClick: () => void;
-}) {
-  return (
-    <button type="button" className="dock dashboard-dock" onClick={onClick}>
-      <div className="dock-title"><span className="dock-icon">{icon}</span><span>{title}</span><span className="dock-arrow">→</span></div>
-      <div className="dock-stat"><strong>{value}</strong><span>{detail}</span></div>
-    </button>
-  );
-}
-
           <h3>Your project is ready to work on.</h3>
         </div>
         <div className="quick-actions">
