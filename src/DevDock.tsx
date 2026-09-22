@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { supabase } from './utils/supabase.ts';
+import WikiView from './WikiView.tsx';
 import './styling/DevDock.css';
 
 type View = 'dashboard' | 'wiki' | 'bugs' | 'builds' | 'github' | 'timeline';
@@ -57,7 +58,6 @@ function DevDock() {
 
   const [newOrganization, setNewOrganization] = useState('');
   const [newBug, setNewBug] = useState('');
-  const [newWiki, setNewWiki] = useState('');
   const [selectedWiki, setSelectedWiki] = useState<WikiPage | null>(null);
 
   const [buildVersion, setBuildVersion] = useState('0.1.0');
@@ -259,12 +259,17 @@ function DevDock() {
     if (wikiResult.error) throw wikiResult.error;
     if (timelineResult.error) throw timelineResult.error;
 
+    const nextWikiPages = (wikiResult.data ?? []) as WikiPage[];
     setBugs((bugsResult.data ?? []) as Bug[]);
     setBuilds((buildsResult.data ?? []) as Build[]);
-    setWikiPages((wikiResult.data ?? []) as WikiPage[]);
+    setWikiPages(nextWikiPages);
     setTimeline((timelineResult.data ?? []) as TimelineEvent[]);
     setGithubRepo(nextProject.github_repo ?? '');
     setGithubBranch(nextProject.github_branch || 'main');
+
+    const savedWikiId = localStorage.getItem(`test-project:wiki:selected:${nextProject.id}`);
+    const savedWiki = nextWikiPages.find((page) => page.id === savedWikiId) ?? null;
+    setSelectedWiki(savedWiki);
   }
 
   async function selectProject(nextProject: Project) {
@@ -320,14 +325,38 @@ function DevDock() {
     }
   }
 
-  async function addWikiPage() {
-    const title = newWiki.trim();
-    if (!project || !title) return;
+  async function addWikiPage(parentId: string | null = null, requestedTitle?: string): Promise<WikiPage | null> {
+    const title = (requestedTitle ?? newWiki).trim();
+
+    if (!project || !title) {
+      return null;
+    }
 
     try {
       setError('');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('You are no longer signed in.');
+
+      const orderQuery = parentId === null
+        ? supabase
+            .from('wiki_pages')
+            .select('sort_order')
+            .eq('project_id', project.id)
+            .is('parent_id', null)
+            .order('sort_order', { ascending: false })
+            .limit(1)
+        : supabase
+            .from('wiki_pages')
+            .select('sort_order')
+            .eq('project_id', project.id)
+            .eq('parent_id', parentId)
+            .order('sort_order', { ascending: false })
+            .limit(1);
+
+      const { data: lastSibling, error: orderError } = await orderQuery;
+      if (orderError) throw orderError;
+
+      const sortOrder = ((lastSibling?.[0]?.sort_order as number | undefined) ?? -1) + 1;
 
       const { data, error: insertError } = await supabase
         .from('wiki_pages')
@@ -336,48 +365,191 @@ function DevDock() {
           title,
           slug: `${slugify(title) || 'page'}-${crypto.randomUUID().slice(0, 5)}`,
           content: `# ${title}\n\nStart documenting this part of the project.`,
+          parent_id: parentId,
+          sort_order: sortOrder,
           created_by: user.id,
         })
-        .select('id,title,slug,content,parent_id,updated_at')
+        .select('id,title,slug,content,parent_id,sort_order,updated_at')
         .single();
 
       if (insertError || !data) throw insertError ?? new Error('Could not create wiki page.');
 
       const page = data as WikiPage;
-      setWikiPages((current) => [page, ...current]);
-      setSelectedWiki(page);
+      setWikiPages((current) => [...current, page]);
+      selectWikiPage(page);
       setNewWiki('');
       await addTimeline('wiki', `Wiki page created: ${title}`);
+      return page;
     } catch (wikiError) {
       setError(wikiError instanceof Error ? wikiError.message : 'Could not create wiki page.');
+      return null;
     }
   }
 
-  async function saveWikiPage() {
-    if (!selectedWiki) return;
+  function selectWikiPage(page: WikiPage | null) {
+    setSelectedWiki(page);
+
+    if (!project) {
+      return;
+    }
+
+    const key = `test-project:wiki:selected:${project.id}`;
+
+    if (page) {
+      localStorage.setItem(key, page.id);
+    } else {
+      localStorage.removeItem(key);
+    }
+  }
+
+  async function saveWikiPage(pageToSave?: WikiPage): Promise<WikiPage | null> {
+    const page = pageToSave ?? selectedWiki;
+
+    if (!page) {
+      return null;
+    }
 
     try {
       setError('');
       const { data, error: updateError } = await supabase
         .from('wiki_pages')
         .update({
-          title: selectedWiki.title,
-          content: selectedWiki.content,
+          title: page.title,
+          content: page.content,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', selectedWiki.id)
-        .select('id,title,slug,content,parent_id,updated_at')
+        .eq('id', page.id)
+        .select('id,title,slug,content,parent_id,sort_order,updated_at')
         .single();
 
       if (updateError || !data) throw updateError ?? new Error('Could not save wiki page.');
 
-      const page = data as WikiPage;
-      setWikiPages((current) => current.map((item) => item.id === page.id ? page : item));
-      setSelectedWiki(page);
+      const updatedPage = data as WikiPage;
+      setWikiPages((current) => current.map((item) => item.id === updatedPage.id ? updatedPage : item));
+      selectWikiPage(updatedPage);
       setMessage('Wiki page saved.');
-      await addTimeline('wiki', `Wiki page updated: ${page.title}`);
+      await addTimeline('wiki', `Wiki page updated: ${updatedPage.title}`);
+      return updatedPage;
     } catch (wikiError) {
       setError(wikiError instanceof Error ? wikiError.message : 'Could not save wiki page.');
+      return null;
+    }
+  }
+
+  async function deleteWikiPage(page: WikiPage): Promise<boolean> {
+    try {
+      setError('');
+
+      const { data: children, error: childError } = await supabase
+        .from('wiki_pages')
+        .select('id')
+        .eq('parent_id', page.id)
+        .limit(1);
+
+      if (childError) throw childError;
+
+      if ((children ?? []).length > 0) {
+        setError('Move or delete this page’s child pages before deleting it.');
+        return false;
+      }
+
+      const { error: deleteError } = await supabase
+        .from('wiki_pages')
+        .delete()
+        .eq('id', page.id);
+
+      if (deleteError) throw deleteError;
+
+      setWikiPages((current) => current.filter((item) => item.id !== page.id));
+
+      if (selectedWiki?.id === page.id) {
+        selectWikiPage(null);
+      }
+
+      await addTimeline('wiki', `Wiki page deleted: ${page.title}`);
+      setMessage('Wiki page deleted.');
+      return true;
+    } catch (wikiError) {
+      setError(wikiError instanceof Error ? wikiError.message : 'Could not delete wiki page.');
+      return false;
+    }
+  }
+
+  async function moveWikiPage(pageId: string, targetId: string | null, position: 'before' | 'inside' | 'after'): Promise<boolean> {
+    if (!project || pageId === targetId) {
+      return false;
+    }
+
+    try {
+      setError('');
+
+      const page = wikiPages.find((item) => item.id === pageId);
+      const target = targetId ? wikiPages.find((item) => item.id === targetId) : null;
+
+      if (!page || (targetId && !target)) {
+        return false;
+      }
+
+      if (targetId) {
+        let ancestor: WikiPage | undefined = target;
+        while (ancestor?.parent_id) {
+          if (ancestor.parent_id === pageId) {
+            setError('A page cannot be moved inside one of its own children.');
+            return false;
+          }
+          ancestor = wikiPages.find((item) => item.id === ancestor?.parent_id);
+        }
+      }
+
+      const nextParentId = position === 'inside' ? targetId : (target?.parent_id ?? null);
+      const siblings = wikiPages
+        .filter((item) => item.id !== pageId && item.parent_id === nextParentId)
+        .sort((a, b) => a.sort_order - b.sort_order);
+
+      let insertionIndex = siblings.length;
+
+      if (position !== 'inside' && target) {
+        const targetIndex = siblings.findIndex((item) => item.id === target.id);
+        insertionIndex = targetIndex < 0
+          ? siblings.length
+          : position === 'before'
+            ? targetIndex
+            : targetIndex + 1;
+      }
+
+      siblings.splice(insertionIndex, 0, {
+        ...page,
+        parent_id: nextParentId,
+        sort_order: 0,
+      });
+
+      for (let index = 0; index < siblings.length; index += 1) {
+        const item = siblings[index];
+
+        const { error: reorderError } = await supabase
+          .from('wiki_pages')
+          .update({ sort_order: index })
+          .eq('id', item.id);
+
+        if (reorderError) throw reorderError;
+      }
+
+      const { error: moveError } = await supabase
+        .from('wiki_pages')
+        .update({
+          parent_id: nextParentId,
+          sort_order: insertionIndex,
+        })
+        .eq('id', page.id);
+
+      if (moveError) throw moveError;
+
+      await loadProjectData(project);
+      await addTimeline('wiki', `Wiki page moved: ${page.title}`);
+      return true;
+    } catch (moveError) {
+      setError(moveError instanceof Error ? moveError.message : 'Could not move wiki page.');
+      return false;
     }
   }
 
@@ -690,13 +862,14 @@ function DevDock() {
 
         {view === 'wiki' && (
           <WikiView
+            projectId={project?.id ?? null}
             pages={wikiPages}
-            selected={selectedWiki}
-            value={newWiki}
-            onChange={setNewWiki}
-            onCreate={() => void addWikiPage()}
-            onSelect={setSelectedWiki}
-            onSave={() => void saveWikiPage()}
+            selectedId={selectedWiki?.id ?? null}
+            onSelect={selectWikiPage}
+            onCreatePage={addWikiPage}
+            onSavePage={saveWikiPage}
+            onDeletePage={deleteWikiPage}
+            onMovePage={moveWikiPage}
           />
         )}
 
@@ -817,162 +990,6 @@ function DashboardDock({
       <div className="dock-stat"><strong>{value}</strong><span>{detail}</span></div>
       <div className="dock-list">{children}</div>
     </button>
-  );
-}
-
-function WikiView({
-  pages,
-  selected,
-  value,
-  onChange,
-  onCreate,
-  onSelect,
-  onSave,
-}: {
-  pages: WikiPage[];
-  selected: WikiPage | null;
-  value: string;
-  onChange: (value: string) => void;
-  onCreate: () => void;
-  onSelect: (page: WikiPage) => void;
-  onSave: () => void;
-}) {
-  return (
-    <section className="wiki-layout">
-      <aside className="wiki-tree-panel">
-        <div className="wiki-tree-header">
-          <div>
-            <span className="dock-kicker">PROJECT WIKI</span>
-            <h2>Documentation</h2>
-          </div>
-          <span className="wiki-count">{pages.length}</span>
-        </div>
-
-        <div className="wiki-create">
-          <input
-            value={value}
-            onChange={(event) => onChange(event.target.value)}
-            placeholder="New page"
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                onCreate();
-              }
-            }}
-          />
-          <button type="button" className="primary-button" onClick={onCreate}>
-            New
-          </button>
-        </div>
-
-        <div className="wiki-tree">
-          <WikiTree pages={pages} parentId={null} selectedId={selected?.id ?? null} onSelect={onSelect} />
-          {pages.length === 0 && (
-            <EmptyState
-              title="No pages yet"
-              detail="Create your first page to start the documentation tree."
-            />
-          )}
-        </div>
-      </aside>
-
-      <section className="wiki-content-panel">
-        {selected ? (
-          <>
-            <div className="wiki-page-header">
-              <div>
-                <span className="dock-kicker">PAGE</span>
-                <h2>{selected.title}</h2>
-                <p>Updated {formatDate(selected.updated_at)}</p>
-              </div>
-              <button type="button" className="primary-button" onClick={onSave}>
-                Save
-              </button>
-            </div>
-
-            <div className="wiki-breadcrumb">
-              <span>Wiki</span>
-              <span>›</span>
-              <strong>{selected.title}</strong>
-            </div>
-
-            <div className="wiki-editor">
-              <input
-                value={selected.title}
-                onChange={(event) =>
-                  onSelect({
-                    ...selected,
-                    title: event.target.value,
-                  })
-                }
-              />
-              <textarea
-                value={selected.content}
-                onChange={(event) =>
-                  onSelect({
-                    ...selected,
-                    content: event.target.value,
-                  })
-                }
-              />
-            </div>
-          </>
-        ) : (
-          <div className="wiki-empty-content">
-            <span className="dock-kicker">PROJECT WIKI</span>
-            <h2>Select a page</h2>
-            <p>Choose a document from the tree to start reading or editing it.</p>
-          </div>
-        )}
-      </section>
-    </section>
-  );
-}
-
-function WikiTree({
-  pages,
-  parentId,
-  selectedId,
-  onSelect,
-}: {
-  pages: WikiPage[];
-  parentId: string | null;
-  selectedId: string | null;
-  onSelect: (page: WikiPage) => void;
-}) {
-  const children = pages.filter((page) => page.parent_id === parentId);
-
-  return (
-    <div className={parentId === null ? 'wiki-tree-level root' : 'wiki-tree-level'}>
-      {children.map((page) => {
-        const hasChildren = pages.some((child) => child.parent_id === page.id);
-
-        return (
-          <div className="wiki-tree-node" key={page.id}>
-            <button
-              type="button"
-              className={`wiki-tree-item${selectedId === page.id ? ' selected' : ''}`}
-              onClick={() => onSelect(page)}
-            >
-              <span className={`wiki-tree-toggle${hasChildren ? '' : ' empty'}`}>
-                {hasChildren ? '⌄' : '·'}
-              </span>
-              <span className="wiki-tree-icon">□</span>
-              <span>{page.title}</span>
-            </button>
-            {hasChildren && (
-              <div className="wiki-tree-children">
-                <WikiTree
-                  pages={pages}
-                  parentId={page.id}
-                  selectedId={selectedId}
-                  onSelect={onSelect}
-                />
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
   );
 }
 
