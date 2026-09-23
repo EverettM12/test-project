@@ -1651,66 +1651,6 @@ function OrganizationHome({
           </div>
         )}
       </div>
-
-      <aside className="organization-usage-card">
-        <div>
-          <span className="eyebrow">ORGANIZATION</span>
-          <h2>{organization.name}</h2>
-
-
-        </div>
-
-        <div className="organization-usage-section">
-          <div className="organization-usage-heading">
-            <span>Projects</span>
-            <strong>{projects.length}</strong>
-          </div>
-          <div className="organization-usage-list">
-            {projects.length > 0 ? (
-              projects.map((item) => (
-                <button
-                  type="button"
-                  className="organization-usage-item"
-                  key={item.id}
-                  onClick={() => onSelectProject(item)}
-                >
-                  <span>{item.name}</span>
-                  <span>→</span>
-                </button>
-              ))
-            ) : (
-              <span className="organization-usage-empty">No projects yet.</span>
-            )}
-          </div>
-        </div>
-
-        <div className="organization-usage-section">
-          <div className="organization-usage-heading">
-            <span>GitHub repositories</span>
-            <strong>{projects.filter((item) => Boolean(item.github_repo)).length}</strong>
-          </div>
-          <div className="organization-usage-list">
-            {projects.filter((item) => Boolean(item.github_repo)).length > 0 ? (
-              projects
-                .filter((item): item is Project & { github_repo: string } => Boolean(item.github_repo))
-                .map((item) => (
-                  <a
-                    className="organization-usage-item organization-usage-repository"
-                    key={item.id}
-                    href={`https://github.com/${item.github_repo}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <span>{item.github_repo}</span>
-                    <span>↗</span>
-                  </a>
-                ))
-            ) : (
-              <span className="organization-usage-empty">No repositories connected.</span>
-            )}
-          </div>
-        </div>
-      </aside>
     </section>
   );
 }
